@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Today</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Today">
+<meta name="theme-color" content="#007aff">
+<style>
+  :root {
+    --bg-top: #eef1f6;
+    --bg-bottom: #e2e6ee;
+    --card-bg: rgba(255, 255, 255, 0.72);
+    --card-border: rgba(255, 255, 255, 0.6);
+    --text-primary: #1d1d1f;
+    --text-secondary: #86868b;
+    --accent: #007aff;
+    --divider: rgba(60, 60, 67, 0.12);
+    --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    --high: #ff3b30;
+    --medium: #ff9500;
+    --low: #34c759;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-top: #1c1c1e;
+      --bg-bottom: #0e0e10;
+      --card-bg: rgba(44, 44, 46, 0.65);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-primary: #f5f5f7;
+      --text-secondary: #98989d;
+      --divider: rgba(255, 255, 255, 0.08);
+      --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+      "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(circle at 20% 0%, var(--bg-top), var(--bg-bottom) 70%);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  .wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 64px 20px 80px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  header h1 {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px;
+  }
+
+  header p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 15px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    padding: 18px;
+  }
+
+  .add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .add-row input[type="text"] {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: rgba(118, 118, 128, 0.12);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 16px;
+    color: var(--text-primary);
+    font-family: inherit;
+  }
+
+  .add-row input[type="text"]::placeholder {
+    color: var(--text-secondary);
+  }
+
+  .priority-select {
+    display: flex;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(118, 118, 128, 0.12);
+  }
+
+  .priority-select button {
+    border: none;
+    background: transparent;
+    width: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+  }
+
+  .priority-select button .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: block;
+  }
+
+  .priority-select button[data-p="high"] .dot { background: var(--high); }
+  .priority-select button[data-p="medium"] .dot { background: var(--medium); }
+  .priority-select button[data-p="low"] .dot { background: var(--low); }
+
+  .priority-select button.active {
+    background: rgba(118, 118, 128, 0.28);
+  }
+
+  .add-btn {
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    width: 44px;
+    border-radius: 12px;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s ease, opacity 0.15s ease;
+  }
+
+  .add-btn:active { transform: scale(0.92); }
+  .add-btn:disabled { opacity: 0.4; cursor: default; }
+
+  .sort-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding: 0 2px;
+  }
+
+  .sort-row .label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .sort-toggle {
+    display: flex;
+    gap: 6px;
+    background: rgba(118, 118, 128, 0.12);
+    border-radius: 10px;
+    padding: 3px;
+  }
+
+  .sort-toggle button {
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .sort-toggle button.active {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
+
+  ul.list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li.item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 2px;
+    border-bottom: 1px solid var(--divider);
+    transition: opacity 0.4s ease;
+  }
+
+  li.item:last-child { border-bottom: none; }
+
+  .checkbox {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(120, 120, 128, 0.4);
+    flex: 0 0 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  }
+
+  .checkbox:active { transform: scale(0.88); }
+
+  .checkbox.checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .checkbox svg {
+    width: 13px;
+    height: 13px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+
+  .checkbox.checked svg {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .priority-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: 0 0 8px;
+  }
+
+  .priority-dot.high { background: var(--high); }
+  .priority-dot.medium { background: var(--medium); }
+  .priority-dot.low { background: var(--low); }
+
+  .item-text {
+    flex: 1;
+    font-size: 16px;
+    line-height: 1.35;
+    word-break: break-word;
+    transition: color 0.3s ease;
+  }
+
+  li.item.done .item-text {
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+    color: var(--text-secondary);
+  }
+
+  li.item.done .priority-dot {
+    opacity: 0.4;
+  }
+
+  .delete-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    padding: 4px;
+    flex: 0 0 auto;
+  }
+
+  li.item:hover .delete-btn { opacity: 0.6; }
+  .delete-btn:hover { opacity: 1 !important; }
+
+  .empty-state {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 15px;
+    padding: 30px 0 10px;
+  }
+
+  .footer-count {
+    text-align: center;
+    margin-top: 16px;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  li.item.removing {
+    opacity: 0;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Today</h1>
+      <p id="dateLabel"></p>
+    </header>
+
+    <div class="card">
+      <div class="add-row">
+        <input type="text" id="newItemInput" placeholder="Add a task" maxlength="200" />
+        <div class="priority-select" id="prioritySelect">
+          <button type="button" data-p="high"><span class="dot"></span></button>
+          <button type="button" data-p="medium" class="active"><span class="dot"></span></button>
+          <button type="button" data-p="low"><span class="dot"></span></button>
+        </div>
+        <button class="add-btn" id="addBtn">+</button>
+      </div>
+
+      <div class="sort-row">
+        <span class="label">Sort by</span>
+        <div class="sort-toggle" id="sortToggle">
+          <button type="button" data-sort="manual" class="active">Manual</button>
+          <button type="button" data-sort="priority">Priority</button>
+        </div>
+      </div>
+
+      <ul class="list" id="list"></ul>
+      <div class="empty-state" id="emptyState" style="display:none;">Nothing here yet — add your first task.</div>
+    </div>
+
+    <div class="footer-count" id="footerCount"></div>
+  </div>
+
+<script>
+(function () {
+  const STORAGE_KEY = 'apple-todo-items-v1';
+  const SORT_KEY = 'apple-todo-sort-v1';
+
+  const listEl = document.getElementById('list');
+  const inputEl = document.getElementById('newItemInput');
+  const addBtn = document.getElementById('addBtn');
+  const prioritySelect = document.getElementById('prioritySelect');
+  const sortToggle = document.getElementById('sortToggle');
+  const emptyState = document.getElementById('emptyState');
+  const footerCount = document.getElementById('footerCount');
+  const dateLabel = document.getElementById('dateLabel');
+
+  const priorityRank = { high: 0, medium: 1, low: 2 };
+  let selectedPriority = 'medium';
+  let sortMode = localStorage.getItem(SORT_KEY) || 'manual';
+
+  let items = loadItems();
+
+  function loadItems() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveItems() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function setSortMode(mode) {
+    sortMode = mode;
+    localStorage.setItem(SORT_KEY, mode);
+    [...sortToggle.children].forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.sort === mode);
+    });
+    render();
+  }
+
+  function getOrderedItems() {
+    const active = items.filter(i => !i.done);
+    const done = items.filter(i => i.done);
+
+    if (sortMode === 'priority') {
+      active.sort((a, b) => priorityRank[a.priority] - priorityRank[b.priority] || a.order - b.order);
+    } else {
+      active.sort((a, b) => a.order - b.order);
+    }
+    done.sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
+    return [...active, ...done];
+  }
+
+  function render() {
+    const ordered = getOrderedItems();
+    listEl.innerHTML = '';
+
+    if (ordered.length === 0) {
+      emptyState.style.display = 'block';
+    } else {
+      emptyState.style.display = 'none';
+    }
+
+    ordered.forEach(item => {
+      const li = document.createElement('li');
+      li.className = 'item' + (item.done ? ' done' : '');
+      li.dataset.id = item.id;
+
+      const checkbox = document.createElement('div');
+      checkbox.className = 'checkbox' + (item.done ? ' checked' : '');
+      checkbox.innerHTML = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      checkbox.addEventListener('click', () => toggleDone(item.id));
+
+      const dot = document.createElement('span');
+      dot.className = 'priority-dot ' + item.priority;
+
+      const text = document.createElement('span');
+      text.className = 'item-text';
+      text.textContent = item.text;
+
+      const del = document.createElement('button');
+      del.className = 'delete-btn';
+      del.setAttribute('aria-label', 'Delete task');
+      del.textContent = '✕';
+      del.addEventListener('click', () => removeItem(item.id));
+
+      li.appendChild(checkbox);
+      li.appendChild(dot);
+      li.appendChild(text);
+      li.appendChild(del);
+      listEl.appendChild(li);
+    });
+
+    const remaining = items.filter(i => !i.done).length;
+    footerCount.textContent = items.length === 0
+      ? ''
+      : `${remaining} ${remaining === 1 ? 'task' : 'tasks'} remaining`;
+  }
+
+  function toggleDone(id) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    item.done = !item.done;
+    item.completedAt = item.done ? Date.now() : null;
+    saveItems();
+    render();
+  }
+
+  function removeItem(id) {
+    const li = listEl.querySelector(`li[data-id="${id}"]`);
+    if (li) {
+      li.classList.add('removing');
+      setTimeout(() => {
+        items = items.filter(i => i.id !== id);
+        saveItems();
+        render();
+      }, 200);
+    } else {
+      items = items.filter(i => i.id !== id);
+      saveItems();
+      render();
+    }
+  }
+
+  function addItem() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+    const maxOrder = items.reduce((m, i) => Math.max(m, i.order || 0), 0);
+    items.push({
+      id: uid(),
+      text,
+      priority: selectedPriority,
+      done: false,
+      order: maxOrder + 1,
+      completedAt: null
+    });
+    saveItems();
+    inputEl.value = '';
+    render();
+    inputEl.focus();
+  }
+
+  addBtn.addEventListener('click', addItem);
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addItem();
+  });
+
+  prioritySelect.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-p]');
+    if (!btn) return;
+    selectedPriority = btn.dataset.p;
+    [...prioritySelect.children].forEach(b => b.classList.toggle('active', b === btn));
+  });
+
+  sortToggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-sort]');
+    if (!btn) return;
+    setSortMode(btn.dataset.sort);
+  });
+
+  dateLabel.textContent = new Date().toLocaleDateString(undefined, {
+    weekday: 'long', month: 'long', day: 'numeric'
+  });
+
+  [...sortToggle.children].forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.sort === sortMode);
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

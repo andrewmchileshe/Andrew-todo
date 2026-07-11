@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "todo-app",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-Command", "$root=(Resolve-Path '.'); $l=New-Object System.Net.HttpListener; $l.Prefixes.Add('http://localhost:5173/'); $l.Start(); $mime=@{'.html'='text/html';'.css'='text/css';'.js'='application/javascript';'.json'='application/json';'.png'='image/png'}; while($l.IsListening){ try { $c=$l.GetContext();$p=$c.Request.Url.LocalPath; if($p -eq '/'){$p='/index.html'}; $fp=Join-Path $root ($p.TrimStart('/')); if(Test-Path $fp -PathType Leaf){ [byte[]]$b=[IO.File]::ReadAllBytes($fp); $ext=[IO.Path]::GetExtension($fp); $ct=$mime[$ext]; if(-not $ct){$ct='application/octet-stream'}; $c.Response.ContentType=$ct; $c.Response.ContentLength64=[int64]$b.Length; $c.Response.OutputStream.Write($b,0,$b.Length); $c.Response.OutputStream.Flush() } else {$c.Response.StatusCode=404}; $c.Response.OutputStream.Close() } catch { } }"],
+      "port": 5173
+    }
+  ]
+}
