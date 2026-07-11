@@ -57,6 +57,7 @@
     max-width: 480px;
     margin: 0 auto;
     padding: 64px 20px 80px;
+    position: relative;
   }
 
   header {
@@ -314,10 +315,186 @@
   li.item.removing {
     opacity: 0;
   }
+
+  .sync-btn {
+    position: absolute;
+    top: 64px;
+    right: 20px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: var(--card-bg);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .sync-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--text-secondary);
+  }
+
+  .sync-dot {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #98989d;
+    border: 2px solid var(--bg-bottom);
+  }
+
+  .sync-dot.connected { background: var(--low); }
+  .sync-dot.connecting { background: var(--medium); }
+  .sync-dot.error { background: var(--high); }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    max-width: 380px;
+    width: 100%;
+    padding: 22px;
+    position: relative;
+    transform: scale(0.96);
+    transition: transform 0.2s ease;
+  }
+
+  .modal-overlay.open .modal-card {
+    transform: scale(1);
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    border: none;
+    background: rgba(118, 118, 128, 0.16);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-card h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  .modal-card .sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 16px;
+  }
+
+  .code-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .code-display {
+    flex: 1;
+    background: rgba(118, 118, 128, 0.12);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .pill-btn {
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .modal-card .field-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 8px;
+  }
+
+  .join-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .join-row input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: rgba(118, 118, 128, 0.12);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--text-primary);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  .sync-status-line {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+  }
 </style>
 </head>
 <body>
   <div class="wrap">
+    <button class="sync-btn" id="syncBtn" aria-label="Sync across devices">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 12a9 9 0 0 1 15.3-6.4L21 8"/><path d="M3 21v-5h5"/><path d="M21 3v5h-5"/>
+      </svg>
+      <span class="sync-dot" id="syncDot"></span>
+    </button>
+
     <header>
       <h1>Today</h1>
       <p id="dateLabel"></p>
@@ -349,10 +526,37 @@
     <div class="footer-count" id="footerCount"></div>
   </div>
 
+  <div class="modal-overlay" id="syncModal">
+    <div class="modal-card">
+      <button class="modal-close" id="syncModalClose" aria-label="Close">✕</button>
+      <h2>Sync across devices</h2>
+      <p class="sub">Open this same code on your other devices to share this list.</p>
+
+      <p class="field-label">Your code</p>
+      <div class="code-row">
+        <div class="code-display" id="syncCodeDisplay"></div>
+        <button class="pill-btn" id="copyCodeBtn">Copy</button>
+      </div>
+
+      <p class="field-label">Join a different list</p>
+      <div class="join-row">
+        <input type="text" id="joinCodeInput" placeholder="Paste a code" />
+        <button class="pill-btn" id="joinCodeBtn">Connect</button>
+      </div>
+
+      <p class="sync-status-line" id="syncStatusText">Not connected</p>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
 <script>
 (function () {
   const STORAGE_KEY = 'apple-todo-items-v1';
   const SORT_KEY = 'apple-todo-sort-v1';
+  const SYNC_CODE_KEY = 'apple-todo-sync-code-v1';
 
   const listEl = document.getElementById('list');
   const inputEl = document.getElementById('newItemInput');
@@ -362,6 +566,16 @@
   const emptyState = document.getElementById('emptyState');
   const footerCount = document.getElementById('footerCount');
   const dateLabel = document.getElementById('dateLabel');
+
+  const syncBtn = document.getElementById('syncBtn');
+  const syncDot = document.getElementById('syncDot');
+  const syncModal = document.getElementById('syncModal');
+  const syncModalClose = document.getElementById('syncModalClose');
+  const syncCodeDisplay = document.getElementById('syncCodeDisplay');
+  const copyCodeBtn = document.getElementById('copyCodeBtn');
+  const joinCodeInput = document.getElementById('joinCodeInput');
+  const joinCodeBtn = document.getElementById('joinCodeBtn');
+  const syncStatusText = document.getElementById('syncStatusText');
 
   const priorityRank = { high: 0, medium: 1, low: 2 };
   let selectedPriority = 'medium';
@@ -378,12 +592,79 @@
     }
   }
 
-  function saveItems() {
+  function saveItems(pushRemote = true) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    if (pushRemote) pushToCloud();
   }
 
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  // --- Cross-device sync (Firestore) ---
+  let syncCode = localStorage.getItem(SYNC_CODE_KEY) || createSyncCode();
+  localStorage.setItem(SYNC_CODE_KEY, syncCode);
+
+  let db = null;
+  let unsubscribe = null;
+  let applyingRemote = false;
+
+  function createSyncCode() {
+    if (window.crypto && crypto.randomUUID) {
+      return crypto.randomUUID().replace(/-/g, '').slice(0, 12);
+    }
+    return uid() + uid();
+  }
+
+  function setSyncStatus(state) {
+    syncDot.className = 'sync-dot ' + state;
+    const labels = {
+      unconfigured: 'Sync not set up yet',
+      connecting: 'Connecting…',
+      connected: 'Synced',
+      error: 'Sync error — check your connection'
+    };
+    syncStatusText.textContent = labels[state] || 'Not connected';
+  }
+
+  function initSync() {
+    if (typeof firebaseConfig === 'undefined' || !firebaseConfig.apiKey || firebaseConfig.apiKey.indexOf('YOUR_') === 0) {
+      setSyncStatus('unconfigured');
+      return;
+    }
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      setSyncStatus('connecting');
+      firebase.auth().signInAnonymously().then(attachListener).catch(() => setSyncStatus('error'));
+    } catch (e) {
+      setSyncStatus('error');
+    }
+  }
+
+  function attachListener() {
+    if (unsubscribe) unsubscribe();
+    const ref = db.collection('lists').doc(syncCode);
+    unsubscribe = ref.onSnapshot(
+      snap => {
+        setSyncStatus('connected');
+        if (snap.exists) {
+          applyingRemote = true;
+          items = snap.data().items || [];
+          saveItems(false);
+          render();
+          applyingRemote = false;
+        } else {
+          ref.set({ items }).catch(() => {});
+        }
+      },
+      () => setSyncStatus('error')
+    );
+  }
+
+  function pushToCloud() {
+    if (!db || applyingRemote) return;
+    db.collection('lists').doc(syncCode).set({ items }).catch(() => {});
   }
 
   function setSortMode(mode) {
@@ -523,6 +804,43 @@
     btn.classList.toggle('active', btn.dataset.sort === sortMode);
   });
 
+  function formatCode(code) {
+    return code.match(/.{1,4}/g).join('-');
+  }
+
+  syncBtn.addEventListener('click', () => {
+    syncCodeDisplay.textContent = formatCode(syncCode);
+    syncModal.classList.add('open');
+  });
+
+  syncModalClose.addEventListener('click', () => syncModal.classList.remove('open'));
+  syncModal.addEventListener('click', (e) => {
+    if (e.target === syncModal) syncModal.classList.remove('open');
+  });
+
+  copyCodeBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(syncCode).then(() => {
+      const original = copyCodeBtn.textContent;
+      copyCodeBtn.textContent = 'Copied';
+      setTimeout(() => { copyCodeBtn.textContent = original; }, 1200);
+    });
+  });
+
+  joinCodeBtn.addEventListener('click', () => {
+    const code = joinCodeInput.value.trim().replace(/[\s-]+/g, '');
+    if (!code) return;
+    syncCode = code;
+    localStorage.setItem(SYNC_CODE_KEY, syncCode);
+    syncCodeDisplay.textContent = formatCode(syncCode);
+    joinCodeInput.value = '';
+    if (db) {
+      setSyncStatus('connecting');
+      attachListener();
+    }
+  });
+
+  setSyncStatus('unconfigured');
+  initSync();
   render();
 })();
 </script>
