@@ -270,10 +270,23 @@
       <label>Company name<input type="text" id="companyNameInput"></label>
       <p class="field-label">Address</p>
       <textarea id="companyAddressInput" rows="2"></textarea>
-      <p class="field-label">Phone</p>
-      <input type="tel" id="companyPhoneInput">
-      <p class="field-label">Email</p>
-      <input type="email" id="companyEmailInput">
+      <div class="form-grid">
+        <label>Phone<input type="tel" id="companyPhoneInput"></label>
+        <label>Email<input type="email" id="companyEmailInput"></label>
+      </div>
+      <label>Tax ID / TPIN<input type="text" id="companyTaxIdInput"></label>
+
+      <p class="field-label">Logo</p>
+      <img id="companyLogoPreview" alt="Company logo" style="display:none; max-width:120px; max-height:60px; border-radius:8px; margin-bottom:8px; background:#fff; padding:4px;">
+      <input type="file" accept="image/png,image/jpeg" id="companyLogoInput">
+      <button type="button" class="text-btn danger" id="companyLogoRemoveBtn" style="display:none;">Remove logo</button>
+
+      <p class="field-label">Sale conditions (shown on Quote PDFs)</p>
+      <textarea id="companySaleConditionsInput" rows="6"></textarea>
+
+      <p class="field-label">Standard notes (shown on Acknowledgement PDFs)</p>
+      <textarea id="companyOaNotesInput" rows="5"></textarea>
+
       <button type="button" class="pill-btn" id="saveSettingsBtn" style="width:100%; margin-top:16px;">Save</button>
     </div>
   </div>

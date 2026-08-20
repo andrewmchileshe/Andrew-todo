@@ -7,9 +7,14 @@
   const marginX = 40;
   const rightEdge = 555;
   const pageWidth = 595;
+  const pageHeight = 842;
 
   function fmt(n) {
     return Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function line(doc, text, x, y) {
+    if (text) doc.text(String(text), x, y);
   }
 
   function sectionBar(doc, y, label) {
@@ -24,6 +29,29 @@
     return y + 18;
   }
 
+  // Bordered box sized to fit the wrapped text, with a page-break guard so a long
+  // notes block doesn't silently run off the bottom of the page.
+  function textBox(doc, y, text, opts) {
+    opts = opts || {};
+    const width = opts.width || (rightEdge - marginX);
+    const fontSize = opts.fontSize || 9;
+    const lineHeight = opts.lineHeight || 12;
+    const padding = 8;
+    doc.setFontSize(fontSize);
+    const lines = doc.splitTextToSize(text, width - padding * 2);
+    const boxHeight = Math.max(30, lines.length * lineHeight + padding * 2);
+
+    if (y + boxHeight > pageHeight - 60) {
+      doc.addPage();
+      y = 40;
+    }
+
+    doc.setDrawColor(200, 200, 200);
+    doc.rect(marginX, y, width, boxHeight);
+    doc.text(lines, marginX + padding, y + padding + 8);
+    return y + boxHeight;
+  }
+
   function generateOaPdf(oa, totals, company) {
     const jsPDF = global.jspdf.jsPDF;
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
@@ -32,15 +60,29 @@
     // ---- header bar ----
     doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
     doc.rect(0, 0, pageWidth, 56, 'F');
+    let nameX = marginX;
+    if (company.logoDataUrl) {
+      try {
+        doc.addImage(company.logoDataUrl, marginX, 12, 32, 32);
+        nameX = marginX + 42;
+      } catch (e) { /* bad image data — skip the logo rather than fail the PDF */ }
+    }
     doc.setTextColor(255, 255, 255);
     doc.setFont(undefined, 'bold');
     doc.setFontSize(16);
-    doc.text((company.name || 'Your Company').toUpperCase(), marginX, 34);
+    doc.text((company.name || 'Your Company').toUpperCase(), nameX, 34);
     doc.setFontSize(13);
     doc.text('ORDER ACKNOWLEDGEMENT', rightEdge, 34, { align: 'right' });
     doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, 'normal');
-    y = 76;
+    y = 68;
+
+    // ---- company details line ----
+    doc.setFontSize(8.5);
+    const companyLine = [company.address, company.phone, company.email, company.taxId ? ('Tax ID: ' + company.taxId) : '']
+      .filter(Boolean).join('   |   ');
+    if (companyLine) { line(doc, companyLine, marginX, y); y += 16; }
+    else { y += 6; }
 
     // ---- info grid ----
     doc.autoTable({
@@ -96,7 +138,7 @@
       head: [['Item', 'Product Description', 'Item Code', 'Qty', 'Unit', 'Unit Price (' + oa.currency + ')', 'Line Total (' + oa.currency + ')', 'Lead Time']],
       body: rows,
       margin: { left: marginX, right: marginX },
-      styles: { fontSize: 8.5, valign: 'middle', cellPadding: 4 },
+      styles: { fontSize: 8.5, valign: 'middle', cellPadding: 4, lineColor: [210, 210, 210], lineWidth: 0.5 },
       headStyles: { fillColor: NAVY, textColor: 255, fontStyle: 'bold', fontSize: 8 },
       columnStyles: {
         0: { cellWidth: 24, halign: 'center' },
@@ -139,33 +181,24 @@
     });
     y = doc.lastAutoTable.finalY + 10;
 
-    // ---- notes ----
+    // ---- notes / remarks: order-specific remarks (if any) + the company's standard
+    // acknowledgement notes (48hr confirmation, non-cancellable special-import items, etc.),
+    // so the latter always appears even if a document's free-text notes are left blank ----
     y = sectionBar(doc, y, 'NOTES / REMARKS');
-    doc.setDrawColor(200, 200, 200);
-    const notesBoxHeight = 50;
-    doc.rect(marginX, y, rightEdge - marginX, notesBoxHeight);
-    if (oa.notes) {
-      doc.setFontSize(9.5);
-      const split = doc.splitTextToSize(oa.notes, rightEdge - marginX - 16);
-      doc.text(split, marginX + 8, y + 14);
-    }
-    y += notesBoxHeight + 20;
+    const standardNotes = company.oaStandardNotes || global.Core.defaultOaNotes();
+    const notesText = oa.notes ? (oa.notes + '\n\n' + standardNotes) : standardNotes;
+    y = textBox(doc, y, notesText, { lineHeight: 12.5 });
 
-    // ---- footer bar ----
-    const footerY = Math.max(y, 780);
+    // ---- footer bar (on the last page) ----
+    const footerLine = [company.name, company.address, company.email, company.phone].filter(Boolean).join('  |  ');
     doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
-    doc.rect(0, footerY, pageWidth, 22, 'F');
+    doc.rect(0, pageHeight - 22, pageWidth, 22, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(8.5);
-    const footerLine = [company.name, company.address, company.email, company.phone].filter(Boolean).join('  |  ');
-    doc.text(footerLine, pageWidth / 2, footerY + 14, { align: 'center' });
+    doc.text(footerLine, pageWidth / 2, pageHeight - 8, { align: 'center' });
     doc.setTextColor(0, 0, 0);
 
     doc.save('Acknowledgement-' + (oa.oaNumber || 'draft') + '.pdf');
-  }
-
-  function line(doc, text, x, y) {
-    if (text) doc.text(String(text), x, y);
   }
 
   global.OaPdf = { generateOaPdf: generateOaPdf };

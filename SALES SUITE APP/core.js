@@ -42,8 +42,15 @@
   const companyAddressInput = el('companyAddressInput');
   const companyPhoneInput = el('companyPhoneInput');
   const companyEmailInput = el('companyEmailInput');
+  const companyTaxIdInput = el('companyTaxIdInput');
+  const companyLogoInput = el('companyLogoInput');
+  const companyLogoPreview = el('companyLogoPreview');
+  const companyLogoRemoveBtn = el('companyLogoRemoveBtn');
+  const companySaleConditionsInput = el('companySaleConditionsInput');
+  const companyOaNotesInput = el('companyOaNotesInput');
   const saveSettingsBtn = el('saveSettingsBtn');
   const settingsStatusText = el('settingsStatusText');
+  let pendingLogoDataUrl = undefined; // undefined = unchanged, null = removed, string = new upload
 
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
@@ -61,6 +68,32 @@
 
   function fmt(n) {
     return Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Sensible defaults for the boilerplate sections on exported PDFs — shown pre-filled
+  // in Settings (so staff can see and edit them) and used as a fallback if a company
+  // hasn't customized them yet, so every document carries them even before anyone
+  // opens Settings.
+  function defaultSaleConditions(companyName) {
+    const name = companyName || 'the Company';
+    return [
+      '1. This quotation is valid for 30 days from the date of issue, unless a different validity date is stated above.',
+      '2. Prices are quoted in the currency shown and exclude VAT unless otherwise stated; VAT is applied at the prevailing statutory rate.',
+      '3. This quotation does not constitute a binding order. An order is confirmed only once we issue a written Order Acknowledgement.',
+      '4. Delivery lead times are estimates only and commence from the date of order confirmation.',
+      '5. Special-order and imported items may not be cancelled, amended, or returned once an order has been confirmed.',
+      '6. Goods remain the property of ' + name + ' until paid for in full.'
+    ].join('\n');
+  }
+
+  function defaultOaNotes() {
+    return [
+      '1. Please check the product descriptions, quantities, prices and delivery details above carefully.',
+      '2. If we do not receive written notice of any discrepancy within 48 hours of the date of this Acknowledgement, the order will be treated as confirmed and correct in every respect.',
+      '3. Once confirmed, special-order and imported items cannot be cancelled, amended or returned.',
+      '4. Lead times quoted are estimates and may be affected by supplier or freight delays outside our control.',
+      '5. Please quote the Acknowledgement Number above in all correspondence relating to this order.'
+    ].join('\n');
   }
 
   const state = {
@@ -245,25 +278,71 @@
   navCatalogBtn.addEventListener('click', () => switchTopNav('catalog'));
 
   // ---------- settings modal (company letterhead) ----------
+  function renderLogoPreview(dataUrl) {
+    if (dataUrl) {
+      companyLogoPreview.src = dataUrl;
+      companyLogoPreview.style.display = '';
+      companyLogoRemoveBtn.style.display = '';
+    } else {
+      companyLogoPreview.removeAttribute('src');
+      companyLogoPreview.style.display = 'none';
+      companyLogoRemoveBtn.style.display = 'none';
+    }
+  }
+
   settingsBtn.addEventListener('click', () => {
     const c = state.company || {};
     companyNameInput.value = c.name || '';
     companyAddressInput.value = c.address || '';
     companyPhoneInput.value = c.phone || '';
     companyEmailInput.value = c.email || '';
+    companyTaxIdInput.value = c.taxId || '';
+    companySaleConditionsInput.value = c.saleConditions || defaultSaleConditions(c.name || companyLabel(state.activeCompanyId));
+    companyOaNotesInput.value = c.oaStandardNotes || defaultOaNotes();
+    pendingLogoDataUrl = undefined;
+    companyLogoInput.value = '';
+    renderLogoPreview(c.logoDataUrl || null);
     settingsStatusText.textContent = 'Editing letterhead for ' + companyLabel(state.activeCompanyId) + '.';
     settingsModal.classList.add('open');
   });
   settingsModalClose.addEventListener('click', () => settingsModal.classList.remove('open'));
   settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) settingsModal.classList.remove('open'); });
 
+  companyLogoInput.addEventListener('change', () => {
+    const file = companyLogoInput.files && companyLogoInput.files[0];
+    if (!file) return;
+    if (file.size > 900 * 1024) {
+      settingsStatusText.textContent = 'That image is too large (max ~900KB) — please use a smaller/compressed logo.';
+      companyLogoInput.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      pendingLogoDataUrl = reader.result;
+      renderLogoPreview(pendingLogoDataUrl);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  companyLogoRemoveBtn.addEventListener('click', () => {
+    pendingLogoDataUrl = null;
+    companyLogoInput.value = '';
+    renderLogoPreview(null);
+  });
+
   saveSettingsBtn.addEventListener('click', () => {
     const data = {
       name: companyNameInput.value.trim(),
       address: companyAddressInput.value.trim(),
       phone: companyPhoneInput.value.trim(),
-      email: companyEmailInput.value.trim()
+      email: companyEmailInput.value.trim(),
+      taxId: companyTaxIdInput.value.trim(),
+      saleConditions: companySaleConditionsInput.value.trim(),
+      oaStandardNotes: companyOaNotesInput.value.trim()
     };
+    if (pendingLogoDataUrl !== undefined) {
+      data.logoDataUrl = pendingLogoDataUrl; // string = new logo, null = removed
+    }
     saveSettingsBtn.disabled = true;
     state.db.collection('companies').doc(state.activeCompanyId).set(data, { merge: true })
       .then(() => { settingsModal.classList.remove('open'); })
@@ -280,7 +359,9 @@
     fmt,
     isAdmin,
     onCompanyChange,
-    companyLabel
+    companyLabel,
+    defaultSaleConditions,
+    defaultOaNotes
   };
 
   initFirebase();
