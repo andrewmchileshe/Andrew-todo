@@ -220,6 +220,7 @@
         </div>
 
         <input type="text" class="li-desc" data-field="description" placeholder="Product description" value="${Core.escapeHtml(item.description)}" />
+        <button type="button" class="text-btn" data-pick-catalog>Pick from catalog</button>
 
         <div class="li-grid oa">
           <label>Item code<input type="text" data-field="itemCode" value="${Core.escapeHtml(item.itemCode)}" /></label>
@@ -327,6 +328,20 @@
     const item = state.oa.lineItems.find((i) => i.id === card.dataset.itemId);
     if (!item) return;
 
+    if (e.target.closest('[data-pick-catalog]')) {
+      CatalogModule.openPicker((catalogItem) => {
+        item.description = catalogItem.description;
+        item.itemCode = catalogItem.itemCode;
+        item.unit = catalogItem.unit;
+        item.unitPrice = catalogItem.sellingPrice;
+        if (state.oa.lineItems.length === 1) {
+          state.oa.currency = catalogItem.sellingCurrency;
+          renderHeader();
+        }
+        renderLineItems(); updateTotals(); saveDraftLocal();
+      });
+      return;
+    }
     if (e.target.closest('[data-remove-item]')) {
       state.oa.lineItems = state.oa.lineItems.filter((i) => i.id !== item.id);
       renderLineItems(); updateTotals(); saveDraftLocal();

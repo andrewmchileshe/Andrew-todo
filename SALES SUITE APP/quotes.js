@@ -162,6 +162,7 @@
         </div>
 
         <input type="text" class="li-desc" data-field="description" placeholder="Item description" value="${Core.escapeHtml(item.description)}" />
+        <button type="button" class="text-btn" data-pick-catalog>Pick from catalog</button>
 
         <div class="li-grid">
           <label>Qty<input type="number" min="0" step="1" data-field="qty" value="${item.qty}" /></label>
@@ -292,6 +293,17 @@
     const item = state.quotation.lineItems.find((i) => i.id === card.dataset.itemId);
     if (!item) return;
 
+    if (e.target.closest('[data-pick-catalog]')) {
+      CatalogModule.openPicker((catalogItem) => {
+        item.description = catalogItem.description;
+        item.sourceCurrency = catalogItem.costCurrency;
+        item.costPrice = catalogItem.costPrice;
+        item.marginMethod = catalogItem.marginMethod;
+        item.marginValue = catalogItem.marginValue;
+        renderLineItems(); updateTotals(); saveDraftLocal();
+      });
+      return;
+    }
     if (e.target.closest('[data-add-comp]')) {
       item.components.push(blankComponent());
       renderLineItems(); updateTotals(); saveDraftLocal();

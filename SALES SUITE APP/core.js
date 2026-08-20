@@ -31,8 +31,10 @@
 
   const navQuotesBtn = el('navQuotesBtn');
   const navAcknowledgementsBtn = el('navAcknowledgementsBtn');
+  const navCatalogBtn = el('navCatalogBtn');
   const quotesSection = el('quotesSection');
   const acknowledgementsSection = el('acknowledgementsSection');
+  const catalogSection = el('catalogSection');
 
   const settingsModal = el('settingsModal');
   const settingsModalClose = el('settingsModalClose');
@@ -233,11 +235,14 @@
   function switchTopNav(view) {
     quotesSection.style.display = view === 'quotes' ? '' : 'none';
     acknowledgementsSection.style.display = view === 'acknowledgements' ? '' : 'none';
+    catalogSection.style.display = view === 'catalog' ? '' : 'none';
     navQuotesBtn.classList.toggle('active', view === 'quotes');
     navAcknowledgementsBtn.classList.toggle('active', view === 'acknowledgements');
+    navCatalogBtn.classList.toggle('active', view === 'catalog');
   }
   navQuotesBtn.addEventListener('click', () => switchTopNav('quotes'));
   navAcknowledgementsBtn.addEventListener('click', () => switchTopNav('acknowledgements'));
+  navCatalogBtn.addEventListener('click', () => switchTopNav('catalog'));
 
   // ---------- settings modal (company letterhead) ----------
   settingsBtn.addEventListener('click', () => {

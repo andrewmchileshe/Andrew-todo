@@ -40,6 +40,10 @@ service cloud.firestore {
       match /acknowledgements/{oaId} {
         allow read, write: if hasCompanyAccess(companyId);
       }
+
+      match /catalog/{itemId} {
+        allow read, write: if hasCompanyAccess(companyId);
+      }
     }
   }
 }
