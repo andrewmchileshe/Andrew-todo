@@ -1,4 +1,5 @@
-// Product/price catalog. Per-company saved items that Quote and Acknowledgement line
+// Product/price catalog. Shared across all three companies (the same products get
+// sold under more than one of them) — saved items Quote and Acknowledgement line
 // items can pull from instead of retyping cost build-ups and descriptions every time.
 // Exposes CatalogModule.openPicker(onSelect) as the integration point for quotes.js/oa.js.
 (function (global) {
@@ -44,8 +45,8 @@
     pickerCallback: null
   };
 
-  function companyCollection() {
-    return Core.state.db.collection('companies').doc(Core.state.activeCompanyId).collection('catalog');
+  function catalogCollection() {
+    return Core.state.db.collection('catalog');
   }
 
   function filterItems(items, query) {
@@ -82,7 +83,7 @@
       openItemModal(item);
     } else if (e.target.closest('[data-delete-item]')) {
       if (!confirm(`Delete catalog item "${item.description}"? This cannot be undone.`)) return;
-      companyCollection().doc(item.id).delete().catch((err) => alert('Delete failed: ' + err.message));
+      catalogCollection().doc(item.id).delete().catch((err) => alert('Delete failed: ' + err.message));
     }
   });
 
@@ -173,7 +174,7 @@
       createdBy: Core.state.user.uid,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    const colRef = companyCollection();
+    const colRef = catalogCollection();
     const done = (ok, err) => {
       state.saving = false;
       itemSaveBtn.disabled = false;
@@ -190,7 +191,7 @@
   itemDeleteBtn.addEventListener('click', () => {
     if (!state.editingId) return;
     if (!confirm('Delete this catalog item? This cannot be undone.')) return;
-    companyCollection().doc(state.editingId).delete()
+    catalogCollection().doc(state.editingId).delete()
       .then(() => itemModal.classList.remove('open'))
       .catch((err) => { itemStatusText.textContent = 'Delete failed: ' + err.message; });
   });
@@ -231,12 +232,12 @@
     pickerModal.classList.add('open');
   }
 
-  // ---------- company-scoped subscription ----------
+  // ---------- subscription ----------
+  // Shared across companies, so it's subscribed once (on first login) rather than
+  // re-subscribed on every company switch, unlike the quotations/acknowledgements lists.
   Core.onCompanyChange(() => {
-    if (state.itemsUnsub) { state.itemsUnsub(); state.itemsUnsub = null; }
-    state.items = [];
-    renderList();
-    state.itemsUnsub = companyCollection()
+    if (state.itemsUnsub) return;
+    state.itemsUnsub = catalogCollection()
       .orderBy('description')
       .onSnapshot((snap) => {
         state.items = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));

@@ -40,10 +40,13 @@ service cloud.firestore {
       match /acknowledgements/{oaId} {
         allow read, write: if hasCompanyAccess(companyId);
       }
+    }
 
-      match /catalog/{itemId} {
-        allow read, write: if hasCompanyAccess(companyId);
-      }
+    // Product catalog is shared across all three companies — the same items get
+    // sold under more than one company, so keeping separate lists would just mean
+    // re-entering the same product three times.
+    match /catalog/{itemId} {
+      allow read, write: if signedIn();
     }
   }
 }
