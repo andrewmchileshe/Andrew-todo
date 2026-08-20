@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function myProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return signedIn() && myProfile().role == 'admin';
+    }
+
+    function inCompany(companyId) {
+      return signedIn() && myProfile().companyId == companyId;
+    }
+
+    function hasCompanyAccess(companyId) {
+      return isAdmin() || inCompany(companyId);
+    }
+
+    // Each person's own profile: which company they belong to, and their role.
+    // Not self-writable — an admin assigns these by hand in the console (see SETUP.md),
+    // so a member can never grant themselves another company or admin rights.
+    match /users/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /companies/{companyId} {
+      allow read, write: if hasCompanyAccess(companyId);
+
+      match /quotations/{quoteId} {
+        allow read, write: if hasCompanyAccess(companyId);
+      }
+
+      match /acknowledgements/{oaId} {
+        allow read, write: if hasCompanyAccess(companyId);
+      }
+    }
+  }
+}

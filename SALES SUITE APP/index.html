@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Sales Suite</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sales Suite">
+<meta name="theme-color" content="#27376c">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ---------- Login ---------- -->
+  <div id="loginScreen" class="login-wrap">
+    <h1>Sales Suite</h1>
+    <p class="sub">Sign in with your company email</p>
+    <div id="loginErrorText" class="login-error"></div>
+    <form id="loginForm">
+      <div class="login-field"><label>Email</label><input type="email" id="loginEmailInput" required autocomplete="username"></div>
+      <div class="login-field"><label>Password</label><input type="password" id="loginPasswordInput" required autocomplete="current-password"></div>
+      <button type="submit" class="pill-btn" id="loginSubmitBtn" style="width:100%;">Sign in</button>
+    </form>
+  </div>
+
+  <!-- ---------- Gate (signed in, no profile yet) ---------- -->
+  <div id="gateScreen" class="gate-message" style="display:none;">
+    <p id="gateMessageText"></p>
+    <button type="button" class="pill-btn secondary" id="gateSignOutBtn">Sign out</button>
+  </div>
+
+  <!-- ---------- App ---------- -->
+  <div id="appShell" style="display:none;">
+    <div class="wrap">
+      <div class="top-bar">
+        <div class="top-bar-user" id="topBarUserText"></div>
+        <div class="top-actions">
+          <div class="company-switcher" id="companySwitcherWrap" style="display:none;">
+            <select id="companySwitcherSelect"></select>
+          </div>
+          <button class="icon-round-btn" id="settingsBtn" aria-label="Company settings">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+          <button class="icon-round-btn" id="signOutBtn" aria-label="Sign out">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <header class="top">
+        <h1>Sales Suite</h1>
+        <p>Quotations and Order Acknowledgements</p>
+      </header>
+
+      <div class="nav-toggle">
+        <button type="button" id="navQuotesBtn" class="active">Quotes</button>
+        <button type="button" id="navAcknowledgementsBtn">Acknowledgements</button>
+      </div>
+
+      <!-- ===================== QUOTES ===================== -->
+      <div id="quotesSection">
+        <div class="nav-toggle sub">
+          <button type="button" id="quoteNavEditorBtn" class="active">Editor</button>
+          <button type="button" id="quoteNavHistoryBtn">History</button>
+        </div>
+
+        <div id="quoteEditorView">
+          <div class="card">
+            <div class="doc-meta-row">
+              <span class="doc-number" id="quoteNumberDisplay"></span>
+              <div class="toggle-group" id="quoteStatusToggle">
+                <button type="button" data-status="draft" class="active">Draft</button>
+                <button type="button" data-status="final">Final</button>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <label>Date<input type="date" id="quoteDateInput"></label>
+              <label>Valid until<input type="date" id="quoteValidUntilInput"></label>
+              <label>Base currency
+                <input type="text" id="quoteBaseCurrencySelect" list="quoteCurrencyList" maxlength="6">
+                <datalist id="quoteCurrencyList">
+                  <option value="ZMW"><option value="USD"><option value="ZAR"><option value="GBP"><option value="EUR">
+                </datalist>
+              </label>
+            </div>
+
+            <p class="field-label">Client</p>
+            <div class="form-grid">
+              <label>Name<input type="text" id="quoteClientNameInput"></label>
+              <label>Company<input type="text" id="quoteClientCompanyInput"></label>
+              <label>Email<input type="email" id="quoteClientEmailInput"></label>
+              <label>Phone<input type="tel" id="quoteClientPhoneInput"></label>
+            </div>
+            <label>Address<textarea id="quoteClientAddressInput" rows="2"></textarea></label>
+
+            <p class="field-label">Notes / terms</p>
+            <textarea id="quoteNotesInput" rows="3" placeholder="Payment terms, delivery lead time, etc."></textarea>
+          </div>
+
+          <div class="card">
+            <h2>Line items</h2>
+            <div id="quoteLineItemsContainer"></div>
+            <button type="button" class="add-line-btn" id="quoteAddLineItemBtn">+ Add line item</button>
+          </div>
+
+          <div class="card">
+            <h2>Totals</h2>
+            <div class="totals-row"><span>Subtotal</span><span id="quoteSubtotalDisplay">—</span></div>
+            <div class="totals-row tax-input-row">
+              <span>Output tax (%)</span>
+              <input type="number" id="quoteOutputTaxInput" min="0" step="0.01" value="0">
+            </div>
+            <div class="totals-row"><span>Tax amount</span><span id="quoteTaxAmountDisplay">—</span></div>
+            <div class="totals-row grand"><span>Grand total</span><span id="quoteGrandTotalDisplay">—</span></div>
+          </div>
+
+          <div class="card">
+            <div class="action-row">
+              <button type="button" class="pill-btn" id="quoteSaveBtn">Save</button>
+              <button type="button" class="pill-btn secondary" id="quoteDownloadPdfBtn">Download PDF</button>
+              <button type="button" class="pill-btn secondary" id="quoteNewBtn">New quotation</button>
+            </div>
+            <p class="save-status-text" id="quoteSaveStatusText"></p>
+          </div>
+        </div>
+
+        <div id="quoteHistoryView" style="display:none;">
+          <div class="card">
+            <input type="text" id="quoteHistorySearchInput" placeholder="Search by quote #, client or company">
+          </div>
+          <div class="card">
+            <div id="quoteHistoryList"></div>
+            <p class="empty-state" id="quoteHistoryEmptyState">No saved quotations yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== ACKNOWLEDGEMENTS ===================== -->
+      <div id="acknowledgementsSection" style="display:none;">
+        <div class="nav-toggle sub">
+          <button type="button" id="oaNavEditorBtn" class="active">Editor</button>
+          <button type="button" id="oaNavHistoryBtn">History</button>
+        </div>
+
+        <div id="oaEditorView">
+          <div class="card">
+            <div class="doc-meta-row">
+              <span class="doc-number" id="oaNumberDisplay"></span>
+              <div class="toggle-group" id="oaStatusToggle">
+                <button type="button" data-status="draft" class="active">Draft</button>
+                <button type="button" data-status="final">Final</button>
+              </div>
+            </div>
+            <p class="history-sub" id="oaSourceQuoteLine" style="display:none;"></p>
+
+            <div class="form-grid cols-3">
+              <label>Date issued<input type="date" id="oaDateIssuedInput"></label>
+              <label>Customer PO Ref.<input type="text" id="oaCustomerPoRefInput"></label>
+              <label>Sales rep<input type="text" id="oaSalesRepInput"></label>
+              <label>Acknowledged by<input type="text" id="oaAcknowledgedByInput"></label>
+              <label>Contact<input type="text" id="oaContactInput"></label>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Customer &amp; delivery details</h2>
+            <div class="two-col">
+              <div>
+                <p class="field-label">Bill to</p>
+                <label>Customer name<input type="text" id="oaBillToNameInput"></label>
+                <label>Address<textarea id="oaBillToAddressInput" rows="3"></textarea></label>
+                <label>Phone<input type="tel" id="oaBillToPhoneInput"></label>
+              </div>
+              <div>
+                <p class="field-label">Ship to / delivery address</p>
+                <label>Name<input type="text" id="oaShipToNameInput"></label>
+                <label>Address<textarea id="oaShipToAddressInput" rows="3"></textarea></label>
+                <label>Attn<input type="text" id="oaShipToAttnInput"></label>
+              </div>
+            </div>
+            <button type="button" class="text-btn" id="oaSameAsBillToBtn">Copy Bill To → Ship To</button>
+          </div>
+
+          <div class="card">
+            <h2>Line items</h2>
+            <div id="oaLineItemsContainer"></div>
+            <button type="button" class="add-line-btn" id="oaAddLineItemBtn">+ Add line item</button>
+          </div>
+
+          <div class="card">
+            <h2>Terms &amp; conditions</h2>
+            <div class="form-grid">
+              <label>Payment terms<input type="text" id="oaPaymentTermsInput" placeholder="30 Days From Invoice Date"></label>
+              <label>Incoterms<input type="text" id="oaIncotermsInput" placeholder="DDP"></label>
+              <label>Currency<input type="text" id="oaCurrencyInput" list="oaCurrencyList" maxlength="6"></label>
+              <label>Special instructions<input type="text" id="oaSpecialInstructionsInput"></label>
+            </div>
+            <datalist id="oaCurrencyList">
+              <option value="ZMW"><option value="USD"><option value="ZAR"><option value="GBP"><option value="EUR">
+            </datalist>
+            <p class="field-label">Notes / remarks</p>
+            <textarea id="oaNotesInput" rows="3" placeholder="Back-order details, substitutions, special handling..."></textarea>
+          </div>
+
+          <div class="card">
+            <h2>Totals</h2>
+            <div class="totals-row"><span>Subtotal</span><span id="oaSubtotalDisplay">—</span></div>
+            <div class="totals-row tax-input-row">
+              <span>VAT (%)</span>
+              <input type="number" id="oaVatInput" min="0" step="0.01" value="0">
+            </div>
+            <div class="totals-row"><span>VAT amount</span><span id="oaVatAmountDisplay">—</span></div>
+            <div class="totals-row grand"><span>Total due</span><span id="oaTotalDisplay">—</span></div>
+          </div>
+
+          <div class="card">
+            <div class="action-row">
+              <button type="button" class="pill-btn" id="oaSaveBtn">Save</button>
+              <button type="button" class="pill-btn secondary" id="oaDownloadPdfBtn">Download PDF</button>
+              <button type="button" class="pill-btn secondary" id="oaNewBtn">New acknowledgement</button>
+            </div>
+            <p class="save-status-text" id="oaSaveStatusText"></p>
+          </div>
+        </div>
+
+        <div id="oaHistoryView" style="display:none;">
+          <div class="card">
+            <input type="text" id="oaHistorySearchInput" placeholder="Search by Ack #, PO ref or customer">
+          </div>
+          <div class="card">
+            <div id="oaHistoryList"></div>
+            <p class="empty-state" id="oaHistoryEmptyState">No saved acknowledgements yet.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ---------- Company settings modal ---------- -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-card">
+      <button class="modal-close" id="settingsModalClose" aria-label="Close">✕</button>
+      <h2>Company letterhead</h2>
+      <p class="sub" id="settingsStatusText">Used on exported PDF quotations and acknowledgements.</p>
+      <label>Company name<input type="text" id="companyNameInput"></label>
+      <p class="field-label">Address</p>
+      <textarea id="companyAddressInput" rows="2"></textarea>
+      <p class="field-label">Phone</p>
+      <input type="tel" id="companyPhoneInput">
+      <p class="field-label">Email</p>
+      <input type="email" id="companyEmailInput">
+      <button type="button" class="pill-btn" id="saveSettingsBtn" style="width:100%; margin-top:16px;">Save</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="pricing.js"></script>
+  <script src="quote-pdf.js"></script>
+  <script src="oa-pdf.js"></script>
+  <script src="core.js"></script>
+  <script src="quotes.js"></script>
+  <script src="oa.js"></script>
+</body>
+</html>
