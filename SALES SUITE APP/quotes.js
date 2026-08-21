@@ -409,7 +409,7 @@
 
   downloadPdfBtn.addEventListener('click', () => {
     const totals = Pricing.computeTotals(state.quotation);
-    QuotePdf.generateQuotationPdf(state.quotation, totals, Core.state.company || {});
+    QuotePdf.generateQuotationPdf(state.quotation, totals, Core.companyForPdf());
   });
 
   newQuoteBtn.addEventListener('click', () => {

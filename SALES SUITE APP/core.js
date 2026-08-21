@@ -43,6 +43,7 @@
   const companyPhoneInput = el('companyPhoneInput');
   const companyEmailInput = el('companyEmailInput');
   const companyTaxIdInput = el('companyTaxIdInput');
+  const companyBrandColorInput = el('companyBrandColorInput');
   const companyLogoInput = el('companyLogoInput');
   const companyLogoPreview = el('companyLogoPreview');
   const companyLogoRemoveBtn = el('companyLogoRemoveBtn');
@@ -86,6 +87,18 @@
     ].join('\n');
   }
 
+  // Sampled from each company's actual logo (Quotation template/*.xlsm embedded images) —
+  // Chemsol Limited's mark is a deep purple (not the flat blue used before), Chemsol
+  // Scientific's is a dark green, Labmall Scientific's is blue.
+  const DEFAULT_BRAND_COLORS = {
+    'chemsol-limited': '#412D73',
+    'chemsol-scientific': '#17493C',
+    'labmall-scientific': '#1F3E78'
+  };
+  function defaultBrandColor(companyId) {
+    return DEFAULT_BRAND_COLORS[companyId] || '#27376C';
+  }
+
   function defaultOaNotes() {
     return [
       '1. Please check the product descriptions, quantities, prices and delivery details above carefully.',
@@ -111,6 +124,18 @@
   function onCompanyChange(cb) { companyChangeCallbacks.push(cb); }
 
   function isAdmin() { return !!(state.profile && state.profile.role === 'admin'); }
+
+  // Merges in per-company defaults (brand colour, sale conditions, standard OA notes)
+  // for whatever the company doc hasn't customized yet — so PDFs look right (correct
+  // brand colour, not just a generic one) even before anyone has opened Settings.
+  function companyForPdf() {
+    const c = Object.assign({}, state.company);
+    const label = c.name || companyLabel(state.activeCompanyId);
+    if (!c.brandColor) c.brandColor = defaultBrandColor(state.activeCompanyId);
+    if (!c.saleConditions) c.saleConditions = defaultSaleConditions(label);
+    if (!c.oaStandardNotes) c.oaStandardNotes = defaultOaNotes();
+    return c;
+  }
 
   // ---------- Firebase init ----------
   function initFirebase() {
@@ -297,6 +322,7 @@
     companyPhoneInput.value = c.phone || '';
     companyEmailInput.value = c.email || '';
     companyTaxIdInput.value = c.taxId || '';
+    companyBrandColorInput.value = c.brandColor || defaultBrandColor(state.activeCompanyId);
     companySaleConditionsInput.value = c.saleConditions || defaultSaleConditions(c.name || companyLabel(state.activeCompanyId));
     companyOaNotesInput.value = c.oaStandardNotes || defaultOaNotes();
     pendingLogoDataUrl = undefined;
@@ -337,6 +363,7 @@
       phone: companyPhoneInput.value.trim(),
       email: companyEmailInput.value.trim(),
       taxId: companyTaxIdInput.value.trim(),
+      brandColor: companyBrandColorInput.value || defaultBrandColor(state.activeCompanyId),
       saleConditions: companySaleConditionsInput.value.trim(),
       oaStandardNotes: companyOaNotesInput.value.trim()
     };
@@ -361,7 +388,9 @@
     onCompanyChange,
     companyLabel,
     defaultSaleConditions,
-    defaultOaNotes
+    defaultOaNotes,
+    defaultBrandColor,
+    companyForPdf
   };
 
   initFirebase();

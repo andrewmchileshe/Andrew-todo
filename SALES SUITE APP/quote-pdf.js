@@ -1,8 +1,7 @@
 // Client-facing PDF export. Only reads computed selling-price/total fields —
 // never costPrice, components, or marginValue — so internal margins never leak into a quote PDF.
 (function (global) {
-  const NAVY = [39, 55, 108];
-  const LIGHT_BAND = [235, 237, 245];
+  const DEFAULT_NAVY = [39, 55, 108];
   const marginX = 40;
   const rightEdge = 555;
   const pageWidth = 595;
@@ -16,16 +15,11 @@
     return Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  function sectionBar(doc, y, label) {
-    doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
-    doc.rect(marginX, y, rightEdge - marginX, 18, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont(undefined, 'bold');
-    doc.setFontSize(9.5);
-    doc.text(label, marginX + 8, y + 12.5);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'normal');
-    return y + 18;
+  function hexToRgb(hex) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return null;
+    const n = parseInt(m[1], 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   }
 
   // Bordered box sized to fit the wrapped text, with a page-break guard so a long
@@ -54,7 +48,20 @@
   function generateQuotationPdf(quotation, totals, company) {
     const jsPDF = global.jspdf.jsPDF;
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const NAVY = hexToRgb(company.brandColor) || DEFAULT_NAVY;
     let y = 0;
+
+    function sectionBar(y, label) {
+      doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
+      doc.rect(marginX, y, rightEdge - marginX, 18, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(9.5);
+      doc.text(label, marginX + 8, y + 12.5);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont(undefined, 'normal');
+      return y + 18;
+    }
 
     // ---- header bar ----
     doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
@@ -103,7 +110,7 @@
     y = doc.lastAutoTable.finalY + 10;
 
     // ---- prepared for ----
-    y = sectionBar(doc, y, 'PREPARED FOR');
+    y = sectionBar(y, 'PREPARED FOR');
     const client = quotation.client || {};
     const clientLines = [client.company || client.name, client.company ? client.name : '', client.address, client.email, client.phone]
       .filter(Boolean).join('\n');
@@ -116,7 +123,7 @@
     y += clientBoxHeight + 10;
 
     // ---- quote details (line items) ----
-    y = sectionBar(doc, y, 'QUOTE DETAILS');
+    y = sectionBar(y, 'QUOTE DETAILS');
     const rows = (quotation.lineItems || []).map(function (item) {
       const computed = global.Pricing.computeLineItem(item);
       return [
@@ -160,12 +167,12 @@
 
     // ---- notes (per-quote free text) ----
     if (quotation.notes) {
-      y = sectionBar(doc, y, 'NOTES');
+      y = sectionBar(y, 'NOTES');
       y = textBox(doc, y, quotation.notes) + 10;
     }
 
     // ---- sale conditions ----
-    y = sectionBar(doc, y, 'SALE CONDITIONS');
+    y = sectionBar(y, 'SALE CONDITIONS');
     const saleConditions = company.saleConditions || global.Core.defaultSaleConditions(company.name);
     y = textBox(doc, y, saleConditions, { lineHeight: 13 });
 

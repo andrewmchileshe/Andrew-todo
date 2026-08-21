@@ -439,7 +439,7 @@
 
   downloadPdfBtn.addEventListener('click', () => {
     const totals = Pricing.computeOaTotals(state.oa);
-    OaPdf.generateOaPdf(state.oa, totals, Core.state.company || {});
+    OaPdf.generateOaPdf(state.oa, totals, Core.companyForPdf());
   });
 
   newBtn.addEventListener('click', () => {

@@ -2,8 +2,7 @@
 // template (Quotation template/CL-KMP-1003 Order Acknowledgement.pdf): navy section
 // bars, a Bill To / Ship To block, an itemized table, terms, and notes.
 (function (global) {
-  const NAVY = [39, 55, 108];
-  const LIGHT_BAND = [235, 237, 245];
+  const DEFAULT_NAVY = [39, 55, 108];
   const marginX = 40;
   const rightEdge = 555;
   const pageWidth = 595;
@@ -17,16 +16,15 @@
     if (text) doc.text(String(text), x, y);
   }
 
-  function sectionBar(doc, y, label) {
-    doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
-    doc.rect(marginX, y, rightEdge - marginX, 18, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont(undefined, 'bold');
-    doc.setFontSize(9.5);
-    doc.text(label, marginX + 8, y + 12.5);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'normal');
-    return y + 18;
+  function hexToRgb(hex) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return null;
+    const n = parseInt(m[1], 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+
+  function tint(rgb, amount) {
+    return rgb.map((c) => Math.round(c + (255 - c) * amount));
   }
 
   // Bordered box sized to fit the wrapped text, with a page-break guard so a long
@@ -55,7 +53,21 @@
   function generateOaPdf(oa, totals, company) {
     const jsPDF = global.jspdf.jsPDF;
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const NAVY = hexToRgb(company.brandColor) || DEFAULT_NAVY;
+    const LIGHT_BAND = tint(NAVY, 0.88);
     let y = 0;
+
+    function sectionBar(y, label) {
+      doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
+      doc.rect(marginX, y, rightEdge - marginX, 18, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(9.5);
+      doc.text(label, marginX + 8, y + 12.5);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont(undefined, 'normal');
+      return y + 18;
+    }
 
     // ---- header bar ----
     doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
@@ -105,7 +117,7 @@
     y = doc.lastAutoTable.finalY + 10;
 
     // ---- customer & delivery details ----
-    y = sectionBar(doc, y, 'CUSTOMER & DELIVERY DETAILS');
+    y = sectionBar(y, 'CUSTOMER & DELIVERY DETAILS');
     const billLines = [oa.billTo.name, oa.billTo.address, oa.billTo.phone ? ('Tel: ' + oa.billTo.phone) : ''].filter(Boolean).join('\n');
     const shipLines = [oa.shipTo.name, oa.shipTo.address, oa.shipTo.attn ? ('Attn: ' + oa.shipTo.attn) : ''].filter(Boolean).join('\n');
     doc.autoTable({
@@ -120,7 +132,7 @@
     y = doc.lastAutoTable.finalY + 10;
 
     // ---- order details ----
-    y = sectionBar(doc, y, 'ORDER DETAILS');
+    y = sectionBar(y, 'ORDER DETAILS');
     const rows = (oa.lineItems || []).map(function (item, i) {
       return [
         String(i + 1),
@@ -165,7 +177,7 @@
     y += 24;
 
     // ---- terms & conditions ----
-    y = sectionBar(doc, y, 'TERMS & CONDITIONS');
+    y = sectionBar(y, 'TERMS & CONDITIONS');
     doc.autoTable({
       startY: y,
       body: [
@@ -184,7 +196,7 @@
     // ---- notes / remarks: order-specific remarks (if any) + the company's standard
     // acknowledgement notes (48hr confirmation, non-cancellable special-import items, etc.),
     // so the latter always appears even if a document's free-text notes are left blank ----
-    y = sectionBar(doc, y, 'NOTES / REMARKS');
+    y = sectionBar(y, 'NOTES / REMARKS');
     const standardNotes = company.oaStandardNotes || global.Core.defaultOaNotes();
     const notesText = oa.notes ? (oa.notes + '\n\n' + standardNotes) : standardNotes;
     y = textBox(doc, y, notesText, { lineHeight: 12.5 });
