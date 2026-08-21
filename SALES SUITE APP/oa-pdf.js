@@ -32,8 +32,8 @@
   function textBox(doc, y, text, opts) {
     opts = opts || {};
     const width = opts.width || (rightEdge - marginX);
-    const fontSize = opts.fontSize || 9;
-    const lineHeight = opts.lineHeight || 12;
+    const fontSize = opts.fontSize || 8.5;
+    const lineHeight = opts.lineHeight || 11;
     const padding = 8;
     doc.setFontSize(fontSize);
     const lines = doc.splitTextToSize(text, width - padding * 2);
@@ -62,7 +62,7 @@
       doc.rect(marginX, y, rightEdge - marginX, 18, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(9.5);
+      doc.setFontSize(9);
       doc.text(label, marginX + 8, y + 12.5);
       doc.setTextColor(0, 0, 0);
       doc.setFont(undefined, 'normal');
@@ -81,19 +81,23 @@
     }
     doc.setTextColor(255, 255, 255);
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     doc.text((company.name || 'Your Company').toUpperCase(), nameX, 34);
-    doc.setFontSize(13);
+    doc.setFontSize(11);
     doc.text('ORDER ACKNOWLEDGEMENT', rightEdge, 34, { align: 'right' });
     doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, 'normal');
     y = 68;
 
     // ---- company details line ----
-    doc.setFontSize(8.5);
-    const companyLine = [company.address, company.phone, company.email, company.taxId ? ('Tax ID: ' + company.taxId) : '']
+    // Address is a free-text textarea in Settings and may contain line breaks; flatten it
+    // to one line here so this stays a single fixed-height line — a multi-line address
+    // previously pushed the info grid below into an overlap with this line.
+    doc.setFontSize(8);
+    const flatAddress = (company.address || '').replace(/\s*\n+\s*/g, ', ');
+    const companyLine = [flatAddress, company.phone, company.email, company.taxId ? ('Tax ID: ' + company.taxId) : '']
       .filter(Boolean).join('   |   ');
-    if (companyLine) { line(doc, companyLine, marginX, y); y += 16; }
+    if (companyLine) { line(doc, companyLine, marginX, y); y += 15; }
     else { y += 6; }
 
     // ---- info grid ----
@@ -106,7 +110,7 @@
       ],
       theme: 'plain',
       margin: { left: marginX, right: marginX },
-      styles: { fontSize: 9.5, cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
+      styles: { fontSize: 9, cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
       columnStyles: {
         0: { fontStyle: 'bold', cellWidth: 120 },
         1: { cellWidth: 150 },
@@ -125,8 +129,8 @@
       head: [['Bill To', 'Ship To / Delivery Address']],
       body: [[billLines || '—', shipLines || '—']],
       margin: { left: marginX, right: marginX },
-      styles: { fontSize: 9.5, valign: 'top', cellPadding: 5 },
-      headStyles: { fillColor: LIGHT_BAND, textColor: [30, 30, 30], fontStyle: 'bold' },
+      styles: { fontSize: 9, valign: 'top', cellPadding: 5 },
+      headStyles: { fillColor: LIGHT_BAND, textColor: [30, 30, 30], fontStyle: 'bold', fontSize: 9 },
       columnStyles: { 0: { cellWidth: (rightEdge - marginX) / 2 }, 1: { cellWidth: (rightEdge - marginX) / 2 } }
     });
     y = doc.lastAutoTable.finalY + 10;
@@ -150,8 +154,8 @@
       head: [['Item', 'Product Description', 'Item Code', 'Qty', 'Unit', 'Unit Price (' + oa.currency + ')', 'Line Total (' + oa.currency + ')', 'Lead Time']],
       body: rows,
       margin: { left: marginX, right: marginX },
-      styles: { fontSize: 8.5, valign: 'middle', cellPadding: 4, lineColor: [210, 210, 210], lineWidth: 0.5 },
-      headStyles: { fillColor: NAVY, textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      styles: { fontSize: 8, valign: 'middle', cellPadding: 3.5, lineColor: [210, 210, 210], lineWidth: 0.5 },
+      headStyles: { fillColor: NAVY, textColor: 255, fontStyle: 'bold', fontSize: 7.5 },
       columnStyles: {
         0: { cellWidth: 24, halign: 'center' },
         3: { halign: 'right', cellWidth: 30 },
@@ -163,13 +167,13 @@
     });
     y = doc.lastAutoTable.finalY + 16;
 
-    doc.setFontSize(10);
+    doc.setFontSize(9.5);
     line(doc, 'Sub-Total (' + oa.currency + ')', 380, y);
     doc.text(fmt(totals.subtotal), rightEdge, y, { align: 'right' });
-    y += 15;
+    y += 14;
     line(doc, 'VAT (' + (oa.vatPercent || 0) + '%)', 380, y);
     doc.text(fmt(totals.vatAmount), rightEdge, y, { align: 'right' });
-    y += 15;
+    y += 14;
     doc.setFont(undefined, 'bold');
     line(doc, 'TOTAL DUE (' + oa.currency + ')', 380, y);
     doc.text(fmt(totals.total), rightEdge, y, { align: 'right' });
@@ -188,7 +192,7 @@
       ],
       theme: 'plain',
       margin: { left: marginX, right: marginX },
-      styles: { fontSize: 9.5, cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
+      styles: { fontSize: 9, cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
       columnStyles: { 0: { fontStyle: 'bold', cellWidth: 130 }, 1: { cellWidth: 'auto' } }
     });
     y = doc.lastAutoTable.finalY + 10;
@@ -199,14 +203,14 @@
     y = sectionBar(y, 'NOTES / REMARKS');
     const standardNotes = company.oaStandardNotes || global.Core.defaultOaNotes();
     const notesText = oa.notes ? (oa.notes + '\n\n' + standardNotes) : standardNotes;
-    y = textBox(doc, y, notesText, { lineHeight: 12.5 });
+    y = textBox(doc, y, notesText, { lineHeight: 11.5 });
 
     // ---- footer bar (on the last page) ----
-    const footerLine = [company.name, company.address, company.email, company.phone].filter(Boolean).join('  |  ');
+    const footerLine = [company.name, flatAddress, company.email, company.phone].filter(Boolean).join('  |  ');
     doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
     doc.rect(0, pageHeight - 22, pageWidth, 22, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8.5);
+    doc.setFontSize(8);
     doc.text(footerLine, pageWidth / 2, pageHeight - 8, { align: 'center' });
     doc.setTextColor(0, 0, 0);
 

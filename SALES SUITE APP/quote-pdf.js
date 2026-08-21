@@ -27,8 +27,8 @@
   function textBox(doc, y, text, opts) {
     opts = opts || {};
     const width = opts.width || (rightEdge - marginX);
-    const fontSize = opts.fontSize || 9;
-    const lineHeight = opts.lineHeight || 12;
+    const fontSize = opts.fontSize || 8.5;
+    const lineHeight = opts.lineHeight || 11;
     const padding = 8;
     doc.setFontSize(fontSize);
     const lines = doc.splitTextToSize(text, width - padding * 2);
@@ -56,7 +56,7 @@
       doc.rect(marginX, y, rightEdge - marginX, 18, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(9.5);
+      doc.setFontSize(9);
       doc.text(label, marginX + 8, y + 12.5);
       doc.setTextColor(0, 0, 0);
       doc.setFont(undefined, 'normal');
@@ -75,19 +75,23 @@
     }
     doc.setTextColor(255, 255, 255);
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     doc.text((company.name || 'Your Company').toUpperCase(), nameX, 34);
-    doc.setFontSize(13);
+    doc.setFontSize(11);
     doc.text('QUOTATION', rightEdge, 34, { align: 'right' });
     doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, 'normal');
     y = 68;
 
     // ---- company details line ----
-    doc.setFontSize(8.5);
-    const companyLine = [company.address, company.phone, company.email, company.taxId ? ('Tax ID: ' + company.taxId) : '']
+    // Address is a free-text textarea in Settings and may contain line breaks; flatten it
+    // to one line here so this stays a single fixed-height line — a multi-line address
+    // previously pushed the info grid below into an overlap with this line.
+    doc.setFontSize(8);
+    const flatAddress = (company.address || '').replace(/\s*\n+\s*/g, ', ');
+    const companyLine = [flatAddress, company.phone, company.email, company.taxId ? ('Tax ID: ' + company.taxId) : '']
       .filter(Boolean).join('   |   ');
-    if (companyLine) { line(doc, companyLine, marginX, y); y += 16; }
+    if (companyLine) { line(doc, companyLine, marginX, y); y += 15; }
     else { y += 6; }
 
     // ---- info grid ----
@@ -99,7 +103,7 @@
       ],
       theme: 'plain',
       margin: { left: marginX, right: marginX },
-      styles: { fontSize: 9.5, cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
+      styles: { fontSize: 9, cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
       columnStyles: {
         0: { fontStyle: 'bold', cellWidth: 90 },
         1: { cellWidth: 170 },
@@ -115,11 +119,11 @@
     const clientLines = [client.company || client.name, client.company ? client.name : '', client.address, client.email, client.phone]
       .filter(Boolean).join('\n');
     doc.setDrawColor(200, 200, 200);
-    doc.setFontSize(9.5);
+    doc.setFontSize(9);
     const clientTextLines = doc.splitTextToSize(clientLines || '—', rightEdge - marginX - 16);
-    const clientBoxHeight = Math.max(30, clientTextLines.length * 13 + 16);
+    const clientBoxHeight = Math.max(28, clientTextLines.length * 12 + 16);
     doc.rect(marginX, y, rightEdge - marginX, clientBoxHeight);
-    doc.text(clientTextLines, marginX + 8, y + 16);
+    doc.text(clientTextLines, marginX + 8, y + 15);
     y += clientBoxHeight + 10;
 
     // ---- quote details (line items) ----
@@ -139,8 +143,8 @@
       head: [['Description', 'Qty', 'Unit Price', 'Line Total']],
       body: rows,
       margin: { left: marginX, right: marginX },
-      styles: { fontSize: 9.5, valign: 'middle', cellPadding: 5, lineColor: [210, 210, 210], lineWidth: 0.5 },
-      headStyles: { fillColor: NAVY, textColor: 255, fontStyle: 'bold' },
+      styles: { fontSize: 9, valign: 'middle', cellPadding: 4.5, lineColor: [210, 210, 210], lineWidth: 0.5 },
+      headStyles: { fillColor: NAVY, textColor: 255, fontStyle: 'bold', fontSize: 9 },
       columnStyles: {
         0: { halign: 'left' },
         1: { halign: 'right', cellWidth: 45 },
@@ -149,15 +153,15 @@
       }
     });
 
-    let finalY = doc.lastAutoTable.finalY + 20;
-    doc.setFontSize(11);
+    let finalY = doc.lastAutoTable.finalY + 18;
+    doc.setFontSize(10);
     line(doc, 'Subtotal', 380, finalY);
     doc.text(quotation.baseCurrency + ' ' + fmt(totals.subtotal), rightEdge, finalY, { align: 'right' });
-    finalY += 16;
+    finalY += 15;
     if (Number(quotation.outputTaxPercent) > 0) {
       line(doc, 'Tax (' + quotation.outputTaxPercent + '%)', 380, finalY);
       doc.text(quotation.baseCurrency + ' ' + fmt(totals.taxAmount), rightEdge, finalY, { align: 'right' });
-      finalY += 16;
+      finalY += 15;
     }
     doc.setFont(undefined, 'bold');
     line(doc, 'Grand Total', 380, finalY);
@@ -174,14 +178,14 @@
     // ---- sale conditions ----
     y = sectionBar(y, 'SALE CONDITIONS');
     const saleConditions = company.saleConditions || global.Core.defaultSaleConditions(company.name);
-    y = textBox(doc, y, saleConditions, { lineHeight: 13 });
+    y = textBox(doc, y, saleConditions, { lineHeight: 12 });
 
     // ---- footer bar (on the last page) ----
-    const footerLine = [company.name, company.address, company.email, company.phone].filter(Boolean).join('  |  ');
+    const footerLine = [company.name, flatAddress, company.email, company.phone].filter(Boolean).join('  |  ');
     doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
     doc.rect(0, pageHeight - 22, pageWidth, 22, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8.5);
+    doc.setFontSize(8);
     doc.text(footerLine, pageWidth / 2, pageHeight - 8, { align: 'center' });
     doc.setTextColor(0, 0, 0);
 
