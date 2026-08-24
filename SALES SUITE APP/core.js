@@ -29,12 +29,16 @@
   const settingsBtn = el('settingsBtn');
   const signOutBtn = el('signOutBtn');
 
+  const navDashboardBtn = el('navDashboardBtn');
   const navQuotesBtn = el('navQuotesBtn');
   const navAcknowledgementsBtn = el('navAcknowledgementsBtn');
   const navCatalogBtn = el('navCatalogBtn');
+  const dashboardSection = el('dashboardSection');
   const quotesSection = el('quotesSection');
   const acknowledgementsSection = el('acknowledgementsSection');
   const catalogSection = el('catalogSection');
+  const dashboardGreetingText = el('dashboardGreetingText');
+  const dashboardGrid = document.querySelector('.dashboard-grid');
 
   const settingsModal = el('settingsModal');
   const settingsModalClose = el('settingsModalClose');
@@ -213,8 +217,11 @@
   }
 
   function renderTopBar() {
-    topBarUserText.innerHTML = `<strong>${escapeHtml(state.profile.displayName || state.user.email)}</strong>` +
+    const displayName = state.profile.displayName || state.user.email;
+    topBarUserText.innerHTML = `<strong>${escapeHtml(displayName)}</strong>` +
       (isAdmin() ? ' <span class="badge admin">admin</span>' : '');
+    const firstName = displayName.split(/\s+/)[0];
+    dashboardGreetingText.textContent = 'Welcome back, ' + firstName;
 
     if (isAdmin()) {
       companySwitcherWrap.style.display = '';
@@ -291,16 +298,49 @@
 
   // ---------- top-level nav ----------
   function switchTopNav(view) {
+    dashboardSection.style.display = view === 'dashboard' ? '' : 'none';
     quotesSection.style.display = view === 'quotes' ? '' : 'none';
     acknowledgementsSection.style.display = view === 'acknowledgements' ? '' : 'none';
     catalogSection.style.display = view === 'catalog' ? '' : 'none';
+    navDashboardBtn.classList.toggle('active', view === 'dashboard');
     navQuotesBtn.classList.toggle('active', view === 'quotes');
     navAcknowledgementsBtn.classList.toggle('active', view === 'acknowledgements');
     navCatalogBtn.classList.toggle('active', view === 'catalog');
   }
+  navDashboardBtn.addEventListener('click', () => switchTopNav('dashboard'));
   navQuotesBtn.addEventListener('click', () => switchTopNav('quotes'));
   navAcknowledgementsBtn.addEventListener('click', () => switchTopNav('acknowledgements'));
   navCatalogBtn.addEventListener('click', () => switchTopNav('catalog'));
+
+  // ---------- dashboard quick actions ----------
+  // Each card just jumps to the relevant tab/sub-view (Editor or History) by forwarding a
+  // click to that section's own nav button, reusing its existing switchView logic rather
+  // than duplicating it here.
+  dashboardGrid.addEventListener('click', (e) => {
+    const card = e.target.closest('[data-dash-action]');
+    if (!card) return;
+    switch (card.dataset.dashAction) {
+      case 'new-quote':
+        switchTopNav('quotes');
+        el('quoteNavEditorBtn').click();
+        break;
+      case 'new-oa':
+        switchTopNav('acknowledgements');
+        el('oaNavEditorBtn').click();
+        break;
+      case 'quote-history':
+        switchTopNav('quotes');
+        el('quoteNavHistoryBtn').click();
+        break;
+      case 'oa-history':
+        switchTopNav('acknowledgements');
+        el('oaNavHistoryBtn').click();
+        break;
+      case 'catalog':
+        switchTopNav('catalog');
+        break;
+    }
+  });
 
   // ---------- settings modal (company letterhead) ----------
   function renderLogoPreview(dataUrl) {

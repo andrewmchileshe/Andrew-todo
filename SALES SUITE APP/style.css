@@ -1,31 +1,19 @@
+/* Deliberately always bright/light, regardless of the OS/browser dark-mode setting —
+   this is a business document tool read in offices and warehouses, not a media app. */
 :root {
-  --bg-top: #eef1f6;
-  --bg-bottom: #e2e6ee;
-  --card-bg: rgba(255, 255, 255, 0.72);
-  --card-border: rgba(255, 255, 255, 0.6);
-  --text-primary: #1d1d1f;
-  --text-secondary: #86868b;
+  --bg-top: #f6f8fc;
+  --bg-bottom: #eaeef6;
+  --card-bg: #ffffff;
+  --card-border: rgba(15, 23, 42, 0.06);
+  --text-primary: #16181d;
+  --text-secondary: #6b7280;
   --accent: #007aff;
-  --divider: rgba(60, 60, 67, 0.12);
-  --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --divider: rgba(15, 23, 42, 0.08);
+  --shadow: 0 8px 30px rgba(15, 23, 42, 0.07);
   --high: #ff3b30;
   --medium: #ff9500;
   --low: #34c759;
-  --field-bg: rgba(118, 118, 128, 0.12);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-top: #1c1c1e;
-    --bg-bottom: #0e0e10;
-    --card-bg: rgba(44, 44, 46, 0.65);
-    --card-border: rgba(255, 255, 255, 0.08);
-    --text-primary: #f5f5f7;
-    --text-secondary: #98989d;
-    --divider: rgba(255, 255, 255, 0.08);
-    --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-    --field-bg: rgba(118, 118, 128, 0.24);
-  }
+  --field-bg: #f0f2f6;
 }
 
 * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
@@ -477,6 +465,58 @@ textarea { resize: vertical; min-height: 56px; }
   color: var(--text-secondary);
   font-size: 14px;
   padding: 40px 20px;
+}
+
+/* ---------- dashboard ---------- */
+.dashboard-greeting { text-align: center; margin: 4px 0 22px; }
+.dashboard-greeting h2 { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
+.dashboard-greeting p { margin: 0; color: var(--text-secondary); font-size: 13.5px; }
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 20px 18px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.dashboard-card:hover { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(15, 23, 42, 0.1); }
+.dashboard-card:active { transform: translateY(0); }
+
+.dashboard-card.wide { grid-column: 1 / -1; flex-direction: row; align-items: center; }
+
+.dashboard-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  background: rgba(0, 122, 255, 0.12);
+}
+
+.dashboard-card-icon svg { width: 22px; height: 22px; stroke: var(--accent); }
+
+.dashboard-card-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.dashboard-card-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.4; }
+
+@media (max-width: 480px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {

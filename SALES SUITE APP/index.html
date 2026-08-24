@@ -61,13 +61,51 @@
       </header>
 
       <div class="nav-toggle">
-        <button type="button" id="navQuotesBtn" class="active">Quotes</button>
+        <button type="button" id="navDashboardBtn" class="active">Dashboard</button>
+        <button type="button" id="navQuotesBtn">Quotes</button>
         <button type="button" id="navAcknowledgementsBtn">Acknowledgements</button>
         <button type="button" id="navCatalogBtn">Catalog</button>
       </div>
 
+      <!-- ===================== DASHBOARD ===================== -->
+      <div id="dashboardSection">
+        <div class="dashboard-greeting">
+          <h2 id="dashboardGreetingText">Welcome back</h2>
+          <p>Jump straight to what you need</p>
+        </div>
+        <div class="dashboard-grid">
+          <button type="button" class="dashboard-card" data-dash-action="new-quote">
+            <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg></span>
+            <span class="dashboard-card-title">New Quote</span>
+            <span class="dashboard-card-desc">Start building a quotation from scratch</span>
+          </button>
+          <button type="button" class="dashboard-card" data-dash-action="new-oa">
+            <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+            <span class="dashboard-card-title">New Acknowledgement</span>
+            <span class="dashboard-card-desc">Confirm an order, with or without a prior quote</span>
+          </button>
+          <button type="button" class="dashboard-card" data-dash-action="quote-history">
+            <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+            <span class="dashboard-card-title">Quote History</span>
+            <span class="dashboard-card-desc">Browse, duplicate or convert past quotes</span>
+          </button>
+          <button type="button" class="dashboard-card" data-dash-action="oa-history">
+            <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="5" rx="1"/><path d="M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9"/><path d="M10 13h4"/></svg></span>
+            <span class="dashboard-card-title">Order History</span>
+            <span class="dashboard-card-desc">Look up a saved Acknowledgement</span>
+          </button>
+          <button type="button" class="dashboard-card wide" data-dash-action="catalog">
+            <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83Z"/><circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none"/></svg></span>
+            <span>
+              <span class="dashboard-card-title">Product Catalog</span><br>
+              <span class="dashboard-card-desc">Manage saved items and pricing shared across all three companies</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
       <!-- ===================== QUOTES ===================== -->
-      <div id="quotesSection">
+      <div id="quotesSection" style="display:none;">
         <div class="nav-toggle sub">
           <button type="button" id="quoteNavEditorBtn" class="active">Editor</button>
           <button type="button" id="quoteNavHistoryBtn">History</button>
