@@ -387,13 +387,23 @@
     if (!item) return;
 
     if (e.target.closest('[data-pick-catalog]')) {
+      // Manual-price mode pulls the catalog's selling price directly (the "price list"
+      // use case for repeat items) instead of the cost build-up — whichever mode the
+      // line is already in when you pick decides which one gets filled.
       CatalogModule.openPicker((catalogItem) => {
         item.description = catalogItem.description;
-        item.sourceCurrency = catalogItem.costCurrency;
-        item.costPrice = catalogItem.costPrice;
-        item.marginMethod = catalogItem.marginMethod;
-        item.marginValue = catalogItem.marginValue;
-        item.priceOverride = false;
+        if (item.priceOverride) {
+          item.overridePrice = catalogItem.sellingPrice;
+          if (catalogItem.sellingCurrency && catalogItem.sellingCurrency !== state.quotation.baseCurrency) {
+            setSaveStatus('Pulled ' + catalogItem.sellingCurrency + ' ' + Core.fmt(catalogItem.sellingPrice) +
+              ' as-is — quote currency is ' + state.quotation.baseCurrency + ', so double-check this price.', true);
+          }
+        } else {
+          item.sourceCurrency = catalogItem.costCurrency;
+          item.costPrice = catalogItem.costPrice;
+          item.marginMethod = catalogItem.marginMethod;
+          item.marginValue = catalogItem.marginValue;
+        }
         renderLineItems(); updateTotals(); saveDraftLocal();
       });
       return;
