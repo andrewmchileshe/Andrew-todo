@@ -16,6 +16,7 @@
   const oaNumberDisplay = el('oaNumberDisplay');
   const statusToggle = el('oaStatusToggle');
   const sourceQuoteLine = el('oaSourceQuoteLine');
+  const attributionTextEl = el('oaAttributionText');
 
   const dateIssuedInput = el('oaDateIssuedInput');
   const customerPoRefInput = el('oaCustomerPoRefInput');
@@ -89,7 +90,9 @@
       currency: 'ZMW',
       specialInstructions: '',
       notes: '',
-      vatPercent: 0
+      vatPercent: 0,
+      createdByName: '',
+      lastEditedByName: ''
     };
   }
 
@@ -189,6 +192,9 @@
     [...statusToggle.children].forEach((btn) => btn.classList.toggle('active', btn.dataset.status === oa.status));
     sourceQuoteLine.textContent = oa.sourceQuoteNumber ? ('Converted from quotation ' + oa.sourceQuoteNumber) : '';
     sourceQuoteLine.style.display = oa.sourceQuoteNumber ? '' : 'none';
+    const attribution = attributionText(oa);
+    attributionTextEl.textContent = attribution;
+    attributionTextEl.style.display = attribution ? '' : 'none';
 
     dateIssuedInput.value = oa.dateIssued || '';
     customerPoRefInput.value = oa.customerPoRef || '';
@@ -403,7 +409,11 @@
       subtotal: totals.subtotal,
       vatAmount: totals.vatAmount,
       total: totals.total,
-      createdBy: Core.state.user.uid,
+      // createdBy/createdAt are set once at creation (below) and never overwritten on
+      // later saves, so "who started this" survives someone else editing and saving it.
+      lastEditedBy: Core.state.user.uid,
+      lastEditedByName: Core.state.profile.displayName || Core.state.user.email,
+      lastEditedAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
   }
@@ -432,6 +442,8 @@
     if (state.oa.id) {
       colRef.doc(state.oa.id).set(docData, { merge: true }).then(() => done(true)).catch((err) => done(false, err));
     } else {
+      docData.createdBy = Core.state.user.uid;
+      docData.createdByName = Core.state.profile.displayName || Core.state.user.email;
       docData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       const newRef = colRef.doc();
       newRef.set(docData)
@@ -461,6 +473,13 @@
     });
   }
 
+  function attributionText(item) {
+    const creator = item.createdByName || '';
+    const editor = item.lastEditedByName || '';
+    if (editor && editor !== creator) return 'by ' + (creator || '—') + ' · edited by ' + editor;
+    return creator ? 'by ' + creator : '';
+  }
+
   function renderHistory() {
     const q = (historySearchInput.value || '').trim().toLowerCase();
     const filtered = state.historyItems.filter((item) => {
@@ -476,7 +495,7 @@
       <div class="history-row" data-history-id="${item.id}">
         <div class="history-main">
           <div class="history-title">${Core.escapeHtml(item.oaNumber)} <span class="badge ${item.status}">${item.status}</span></div>
-          <div class="history-sub">${Core.escapeHtml((item.billTo && item.billTo.name) || 'No customer')} · PO ${Core.escapeHtml(item.customerPoRef || '—')} · ${Core.escapeHtml(item.dateIssued || '')}</div>
+          <div class="history-sub">${Core.escapeHtml((item.billTo && item.billTo.name) || 'No customer')} · PO ${Core.escapeHtml(item.customerPoRef || '—')} · ${Core.escapeHtml(item.dateIssued || '')}${attributionText(item) ? ' · ' + Core.escapeHtml(attributionText(item)) : ''}</div>
         </div>
         <div class="history-total">${item.currency} ${Core.fmt(item.total)}</div>
         <div class="history-actions">

@@ -15,6 +15,7 @@
   const navHistoryBtn = el('quoteNavHistoryBtn');
 
   const quoteNumberDisplay = el('quoteNumberDisplay');
+  const attributionTextEl = el('quoteAttributionText');
   const statusToggle = el('quoteStatusToggle');
   const quoteDateInput = el('quoteDateInput');
   const validUntilInput = el('quoteValidUntilInput');
@@ -72,7 +73,9 @@
       lineItems: [],
       sentDate: '',
       outcome: '',
-      outcomeDate: ''
+      outcomeDate: '',
+      createdByName: '',
+      lastEditedByName: ''
     };
   }
 
@@ -130,6 +133,9 @@
     [...statusToggle.children].forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.status === state.quotation.status);
     });
+    const attribution = attributionText(state.quotation);
+    attributionTextEl.textContent = attribution;
+    attributionTextEl.style.display = attribution ? '' : 'none';
     quoteDateInput.value = state.quotation.quoteDate || '';
     validUntilInput.value = state.quotation.validUntil || '';
     baseCurrencySelect.value = state.quotation.baseCurrency || 'ZMW';
@@ -487,7 +493,11 @@
       subtotal: totals.subtotal,
       taxAmount: totals.taxAmount,
       grandTotal: totals.grandTotal,
-      createdBy: Core.state.user.uid,
+      // createdBy/createdAt are set once at creation (below) and never overwritten on
+      // later saves, so "who started this" survives someone else editing and saving it.
+      lastEditedBy: Core.state.user.uid,
+      lastEditedByName: Core.state.profile.displayName || Core.state.user.email,
+      lastEditedAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
   }
@@ -515,6 +525,8 @@
     if (state.quotation.id) {
       colRef.doc(state.quotation.id).set(docData, { merge: true }).then(() => done(true)).catch((err) => done(false, err));
     } else {
+      docData.createdBy = Core.state.user.uid;
+      docData.createdByName = Core.state.profile.displayName || Core.state.user.email;
       docData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       const newRef = colRef.doc();
       newRef.set(docData)
@@ -553,11 +565,20 @@
       sentDate: doc.sentDate || '',
       outcome: doc.outcome || '',
       outcomeDate: doc.outcomeDate || '',
+      createdByName: doc.createdByName || '',
+      lastEditedByName: doc.lastEditedByName || '',
       lineItems: (doc.lineItems || []).map((li) => Object.assign({}, li, {
         id: li.id || Core.uid(),
         components: (li.components || []).map((c) => Object.assign({}, c, { id: c.id || Core.uid() }))
       }))
     };
+  }
+
+  function attributionText(item) {
+    const creator = item.createdByName || '';
+    const editor = item.lastEditedByName || '';
+    if (editor && editor !== creator) return 'by ' + (creator || '—') + ' · edited by ' + editor;
+    return creator ? 'by ' + creator : '';
   }
 
   function renderHistory() {
@@ -577,7 +598,7 @@
       <div class="history-row" data-history-id="${item.id}">
         <div class="history-main">
           <div class="history-title">${Core.escapeHtml(item.quoteNumber)} <span class="badge ${item.status}">${item.status}</span> <span class="badge tracking-${tracking}">${Core.escapeHtml(TRACKING_LABELS[tracking])}</span></div>
-          <div class="history-sub">${Core.escapeHtml((item.client && item.client.name) || 'No client')} · ${Core.escapeHtml(item.quoteDate || '')}</div>
+          <div class="history-sub">${Core.escapeHtml((item.client && item.client.name) || 'No client')} · ${Core.escapeHtml(item.quoteDate || '')}${attributionText(item) ? ' · ' + Core.escapeHtml(attributionText(item)) : ''}</div>
         </div>
         <div class="history-total">${item.baseCurrency} ${Core.fmt(item.grandTotal)}</div>
         <div class="history-actions">
