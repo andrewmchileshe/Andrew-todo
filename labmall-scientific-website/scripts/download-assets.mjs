@@ -11,17 +11,18 @@ const slugify = (s) =>
 
 const heroAbout = [
   { file: "hero", url: "hf_20260824_212219_5e07fa25-1aaf-49ff-b97a-9e5f89f2540b.png" },
-  { file: "about", url: "hf_20260824_212200_754fd5af-035b-4d2e-af2d-4813f2aa43b2.png" },
+  // about + all industries below regenerated for a mixed, majority-people-of-colour team
+  { file: "about", url: "hf_20260824_214549_3fae7fee-8d1b-47a0-8e45-4d7f93410212.png" },
 ];
 
 const industries = [
-  { slug: "mining-mineral-processing", url: "hf_20260824_212200_c51672e0-ad45-4ad9-a4ba-a6594cdcd6ab.png" },
-  { slug: "water-treatment", url: "hf_20260824_212219_cfab4c68-50ca-4da5-b375-ce51d30e2431.png" },
-  { slug: "academia", url: "hf_20260824_212200_9c43676b-dd58-45a8-878d-3d4d7cd87f9e.png" },
-  { slug: "manufacturing", url: "hf_20260824_212225_606b0598-303c-48f5-9940-b57d767f467e.png" },
-  { slug: "agriculture", url: "hf_20260824_212200_9082c7e5-7268-46dd-9f41-04c7739af3d9.png" },
-  { slug: "medical-clinical", url: "hf_20260824_212200_5d13f203-629a-4d0a-a975-703bda96978e.png" },
-  { slug: "environmental", url: "hf_20260824_212201_bc7eeb34-f6f9-4f76-9d6b-584045ad5def.png" },
+  { slug: "mining-mineral-processing", url: "hf_20260824_214549_ba5c554f-951c-4e6d-80e0-ac7c06133faf.png" },
+  { slug: "water-treatment", url: "hf_20260824_214549_f61ffe7e-08ce-4d2d-b7a2-1fdbfffcdbbf.png" },
+  { slug: "academia", url: "hf_20260824_214549_ae124e32-0553-45e0-9fc2-059dac5d4910.png" },
+  { slug: "manufacturing", url: "hf_20260824_214549_35da5794-17f5-4d21-b23b-75405e7f3bff.png" },
+  { slug: "agriculture", url: "hf_20260824_214549_1ad3e290-7a44-4be9-bec0-890aee78c88e.png" },
+  { slug: "medical-clinical", url: "hf_20260824_214549_47fde412-7fa6-4d92-96d7-8b541e8e61cc.png" },
+  { slug: "environmental", url: "hf_20260824_214549_15276799-121a-45c4-a658-31cf802e3990.png" },
 ];
 
 const productPairs = [
