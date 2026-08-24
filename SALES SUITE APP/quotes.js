@@ -26,6 +26,8 @@
   const clientPhoneInput = el('quoteClientPhoneInput');
   const clientAddressInput = el('quoteClientAddressInput');
   const notesInput = el('quoteNotesInput');
+  const pickCustomerBtn = el('quotePickCustomerBtn');
+  const saveCustomerBtn = el('quoteSaveCustomerBtn');
 
   const trackingBadge = el('quoteTrackingBadge');
   const sentDateInput = el('quoteSentDateInput');
@@ -310,6 +312,25 @@
   clientPhoneInput.addEventListener('input', () => { state.quotation.client.phone = clientPhoneInput.value; saveDraftLocal(); });
   clientAddressInput.addEventListener('input', () => { state.quotation.client.address = clientAddressInput.value; saveDraftLocal(); });
   notesInput.addEventListener('input', () => { state.quotation.notes = notesInput.value; saveDraftLocal(); });
+
+  pickCustomerBtn.addEventListener('click', () => {
+    CustomersModule.openPicker((customer) => {
+      state.quotation.client.name = customer.name || '';
+      state.quotation.client.company = customer.company || '';
+      state.quotation.client.email = customer.email || '';
+      state.quotation.client.phone = customer.phone || '';
+      state.quotation.client.address = customer.address || '';
+      renderHeader();
+      saveDraftLocal();
+    });
+  });
+  saveCustomerBtn.addEventListener('click', () => {
+    const c = state.quotation.client;
+    if (!c.name && !c.company) { setSaveStatus('Enter a client name or company before saving as a customer.', true); return; }
+    CustomersModule.saveQuick(c, (ok, err) => {
+      setSaveStatus(ok ? 'Saved to Customers' : ('Save failed: ' + (err && err.message ? err.message : '')), !ok);
+    });
+  });
   outputTaxInput.addEventListener('input', () => {
     state.quotation.outputTaxPercent = Number(outputTaxInput.value) || 0;
     updateTotals();

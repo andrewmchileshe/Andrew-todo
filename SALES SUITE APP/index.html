@@ -65,6 +65,7 @@
         <button type="button" id="navQuotesBtn">Quotes</button>
         <button type="button" id="navAcknowledgementsBtn">Acknowledgements</button>
         <button type="button" id="navCatalogBtn">Catalog</button>
+        <button type="button" id="navCustomersBtn">Customers</button>
         <button type="button" id="navReportsBtn">Reports</button>
       </div>
 
@@ -99,6 +100,11 @@
             <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83Z"/><circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none"/></svg></span>
             <span class="dashboard-card-title">Product Catalog</span>
             <span class="dashboard-card-desc">Manage saved items and pricing</span>
+          </button>
+          <button type="button" class="dashboard-card" data-dash-action="customers">
+            <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+            <span class="dashboard-card-title">Customers</span>
+            <span class="dashboard-card-desc">Saved contacts for repeat quoting</span>
           </button>
           <button type="button" class="dashboard-card" data-dash-action="reports">
             <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></span>
@@ -137,7 +143,13 @@
               </label>
             </div>
 
-            <p class="field-label">Client</p>
+            <div class="doc-meta-row">
+              <p class="field-label" style="margin:0;">Client</p>
+              <div class="action-row" style="flex:none; gap:8px;">
+                <button type="button" class="text-btn" id="quotePickCustomerBtn">Pick from customers</button>
+                <button type="button" class="text-btn" id="quoteSaveCustomerBtn">Save as customer</button>
+              </div>
+            </div>
             <div class="form-grid">
               <label>Name<input type="text" id="quoteClientNameInput"></label>
               <label>Company<input type="text" id="quoteClientCompanyInput"></label>
@@ -234,7 +246,13 @@
           </div>
 
           <div class="card">
-            <h2>Customer &amp; delivery details</h2>
+            <div class="doc-meta-row">
+              <h2 style="margin:0;">Customer &amp; delivery details</h2>
+              <div class="action-row" style="flex:none; gap:8px;">
+                <button type="button" class="text-btn" id="oaPickCustomerBtn">Pick from customers</button>
+                <button type="button" class="text-btn" id="oaSaveCustomerBtn">Save as customer</button>
+              </div>
+            </div>
             <div class="two-col">
               <div>
                 <p class="field-label">Bill to</p>
@@ -317,6 +335,20 @@
         <div class="card">
           <div id="catalogList"></div>
           <p class="empty-state" id="catalogEmptyState">No catalog items yet.</p>
+        </div>
+      </div>
+
+      <!-- ===================== CUSTOMERS ===================== -->
+      <div id="customersSection" style="display:none;">
+        <div class="card">
+          <div class="action-row">
+            <input type="text" id="customerSearchInput" placeholder="Search by name, company or email" style="flex:1;">
+            <button type="button" class="pill-btn" id="customerAddBtn" style="flex:none;">+ Add customer</button>
+          </div>
+        </div>
+        <div class="card">
+          <div id="customerList"></div>
+          <p class="empty-state" id="customerEmptyState">No saved customers yet.</p>
         </div>
       </div>
 
@@ -431,6 +463,41 @@
     </div>
   </div>
 
+  <!-- ---------- Customer add/edit modal ---------- -->
+  <div class="modal-overlay" id="customerItemModal">
+    <div class="modal-card">
+      <button class="modal-close" id="customerItemModalClose" aria-label="Close">✕</button>
+      <h2 id="customerItemModalTitle">Add customer</h2>
+      <div class="form-grid">
+        <label>Contact name<input type="text" id="customerNameInput"></label>
+        <label>Company<input type="text" id="customerCompanyInput"></label>
+      </div>
+      <div class="form-grid">
+        <label>Email<input type="email" id="customerEmailInput"></label>
+        <label>Phone<input type="tel" id="customerPhoneInput"></label>
+      </div>
+      <p class="field-label">Address</p>
+      <textarea id="customerAddressInput" rows="3"></textarea>
+
+      <div class="action-row" style="margin-top:16px;">
+        <button type="button" class="pill-btn" id="customerItemSaveBtn">Save</button>
+        <button type="button" class="pill-btn secondary" id="customerItemDeleteBtn" style="display:none;">Delete</button>
+      </div>
+      <p class="save-status-text" id="customerItemStatusText"></p>
+    </div>
+  </div>
+
+  <!-- ---------- Customer picker modal (used by Quotes and Acknowledgements) ---------- -->
+  <div class="modal-overlay" id="customerPickerModal">
+    <div class="modal-card">
+      <button class="modal-close" id="customerPickerModalClose" aria-label="Close">✕</button>
+      <h2>Pick a customer</h2>
+      <input type="text" id="customerPickerSearchInput" placeholder="Search by name, company or email">
+      <div id="customerPickerList" style="margin-top:12px; max-height:320px; overflow-y:auto;"></div>
+      <p class="empty-state" id="customerPickerEmptyState">No saved customers yet — add one from the Customers tab.</p>
+    </div>
+  </div>
+
   <!-- ---------- Catalog bulk upload modal ---------- -->
   <div class="modal-overlay" id="catalogBulkUploadModal">
     <div class="modal-card">
@@ -459,6 +526,7 @@
   <script src="oa-pdf.js"></script>
   <script src="core.js"></script>
   <script src="catalog.js"></script>
+  <script src="customers.js"></script>
   <script src="quotes.js"></script>
   <script src="oa.js"></script>
   <script src="reports.js"></script>

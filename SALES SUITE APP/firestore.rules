@@ -48,5 +48,11 @@ service cloud.firestore {
     match /catalog/{itemId} {
       allow read, write: if signedIn();
     }
+
+    // Customer directory is shared across all three companies too — the same
+    // customer often buys from more than one, so contact details are entered once.
+    match /customers/{customerId} {
+      allow read, write: if signedIn();
+    }
   }
 }

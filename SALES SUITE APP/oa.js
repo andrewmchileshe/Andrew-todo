@@ -31,6 +31,8 @@
   const shipToAddressInput = el('oaShipToAddressInput');
   const shipToAttnInput = el('oaShipToAttnInput');
   const sameAsBillToBtn = el('oaSameAsBillToBtn');
+  const pickCustomerBtn = el('oaPickCustomerBtn');
+  const saveCustomerBtn = el('oaSaveCustomerBtn');
 
   const lineItemsContainer = el('oaLineItemsContainer');
   const addLineItemBtn = el('oaAddLineItemBtn');
@@ -314,6 +316,24 @@
     state.oa.shipTo = { name: state.oa.billTo.name, address: state.oa.billTo.address, attn: state.oa.shipTo.attn || '' };
     renderHeader();
     saveDraftLocal();
+  });
+
+  // Picking a saved customer fills both Bill To and Ship To with the same saved address —
+  // Ship To stays a normal editable field afterward for orders going to a different site.
+  pickCustomerBtn.addEventListener('click', () => {
+    CustomersModule.openPicker((customer) => {
+      state.oa.billTo = { name: customer.company || customer.name || '', address: customer.address || '', phone: customer.phone || '' };
+      state.oa.shipTo = { name: customer.company || customer.name || '', address: customer.address || '', attn: state.oa.shipTo.attn || '' };
+      renderHeader();
+      saveDraftLocal();
+    });
+  });
+  saveCustomerBtn.addEventListener('click', () => {
+    const b = state.oa.billTo;
+    if (!b.name) { setSaveStatus('Enter a Bill To name before saving as a customer.', true); return; }
+    CustomersModule.saveQuick({ name: '', company: b.name, email: '', phone: b.phone || '', address: b.address || '' }, (ok, err) => {
+      setSaveStatus(ok ? 'Saved to Customers' : ('Save failed: ' + (err && err.message ? err.message : '')), !ok);
+    });
   });
 
   // ---------- line item events ----------

@@ -33,11 +33,13 @@
   const navQuotesBtn = el('navQuotesBtn');
   const navAcknowledgementsBtn = el('navAcknowledgementsBtn');
   const navCatalogBtn = el('navCatalogBtn');
+  const navCustomersBtn = el('navCustomersBtn');
   const navReportsBtn = el('navReportsBtn');
   const dashboardSection = el('dashboardSection');
   const quotesSection = el('quotesSection');
   const acknowledgementsSection = el('acknowledgementsSection');
   const catalogSection = el('catalogSection');
+  const customersSection = el('customersSection');
   const reportsSection = el('reportsSection');
   const dashboardGreetingText = el('dashboardGreetingText');
   const dashboardGrid = document.querySelector('.dashboard-grid');
@@ -304,17 +306,20 @@
     quotesSection.style.display = view === 'quotes' ? '' : 'none';
     acknowledgementsSection.style.display = view === 'acknowledgements' ? '' : 'none';
     catalogSection.style.display = view === 'catalog' ? '' : 'none';
+    customersSection.style.display = view === 'customers' ? '' : 'none';
     reportsSection.style.display = view === 'reports' ? '' : 'none';
     navDashboardBtn.classList.toggle('active', view === 'dashboard');
     navQuotesBtn.classList.toggle('active', view === 'quotes');
     navAcknowledgementsBtn.classList.toggle('active', view === 'acknowledgements');
     navCatalogBtn.classList.toggle('active', view === 'catalog');
+    navCustomersBtn.classList.toggle('active', view === 'customers');
     navReportsBtn.classList.toggle('active', view === 'reports');
   }
   navDashboardBtn.addEventListener('click', () => switchTopNav('dashboard'));
   navQuotesBtn.addEventListener('click', () => switchTopNav('quotes'));
   navAcknowledgementsBtn.addEventListener('click', () => switchTopNav('acknowledgements'));
   navCatalogBtn.addEventListener('click', () => switchTopNav('catalog'));
+  navCustomersBtn.addEventListener('click', () => switchTopNav('customers'));
   navReportsBtn.addEventListener('click', () => switchTopNav('reports'));
 
   // ---------- dashboard quick actions ----------
@@ -343,6 +348,9 @@
         break;
       case 'catalog':
         switchTopNav('catalog');
+        break;
+      case 'customers':
+        switchTopNav('customers');
         break;
       case 'reports':
         switchTopNav('reports');
