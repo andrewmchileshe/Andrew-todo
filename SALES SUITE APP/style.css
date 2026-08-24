@@ -13,7 +13,8 @@
   --high: #ff3b30;
   --medium: #ff9500;
   --low: #34c759;
-  --field-bg: #f0f2f6;
+  --field-bg: #eef1f6;
+  --field-border: #d7dce4;
 }
 
 * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
@@ -139,7 +140,7 @@ header.top p { margin: 0; color: var(--text-secondary); font-size: 14px; }
 input[type="text"], input[type="number"], input[type="date"], input[type="email"],
 input[type="tel"], input[type="password"], select, textarea {
   width: 100%;
-  border: none;
+  border: 1px solid var(--field-border);
   outline: none;
   background: var(--field-bg);
   border-radius: 10px;
@@ -147,6 +148,11 @@ input[type="tel"], input[type="password"], select, textarea {
   font-size: 14px;
   color: var(--text-primary);
   font-family: inherit;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
 }
 
 textarea { resize: vertical; min-height: 56px; }

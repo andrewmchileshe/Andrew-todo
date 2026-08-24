@@ -9,6 +9,14 @@
       "firestore.rules",
       "SETUP.md",
       "**/.*"
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css|html)",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache" }
+        ]
+      }
     ]
   }
 }
