@@ -28,11 +28,23 @@
     let running = costInBase;
     const breakdown = [{ label: 'Cost price', amount: round2(costInBase), runningSubtotal: round2(running) }];
 
+    // Fixed-amount components (freight, duty, surcharges...) can each be in their own
+    // currency — e.g. cost in USD but Freight billed in ZMW — so each carries its own
+    // exchange rate into the line's base currency. Percent components are already a
+    // percentage of the running (base-currency) total, so currency doesn't apply to them.
     (item.components || []).forEach(function (c) {
       const value = Number(c.value) || 0;
-      const amount = c.type === 'percent' ? running * (value / 100) : value;
+      let amount, note;
+      if (c.type === 'percent') {
+        amount = running * (value / 100);
+        note = '';
+      } else {
+        const compRate = Number(c.exchangeRate) || 1;
+        amount = value * compRate;
+        note = c.currency ? (c.currency + ' ' + value.toFixed(2) + (compRate !== 1 ? ' × ' + compRate : '')) : '';
+      }
       running += amount;
-      breakdown.push({ label: c.label || 'Component', amount: round2(amount), runningSubtotal: round2(running) });
+      breakdown.push({ label: c.label || 'Component', note: note, amount: round2(amount), runningSubtotal: round2(running) });
     });
 
     const landedCost = running;

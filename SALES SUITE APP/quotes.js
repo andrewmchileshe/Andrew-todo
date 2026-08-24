@@ -102,7 +102,7 @@
   }
 
   function blankComponent() {
-    return { id: Core.uid(), label: '', type: 'fixed', value: 0 };
+    return { id: Core.uid(), label: '', type: 'fixed', value: 0, currency: state.quotation.baseCurrency || 'ZMW', exchangeRate: 1 };
   }
 
   function loadDraft() {
@@ -168,7 +168,7 @@
     }
     const rows = c.breakdown.map((b) => `
       <div class="li-breakdown-row">
-        <span>${Core.escapeHtml(b.label)}</span>
+        <span>${Core.escapeHtml(b.label)}${b.note ? ' <span class="li-note">(' + Core.escapeHtml(b.note) + ')</span>' : ''}</span>
         <span>${b.amount >= 0 ? '+' : ''}${Core.fmt(b.amount)}</span>
         <span class="li-running">${currency} ${Core.fmt(b.runningSubtotal)}</span>
       </div>`).join('');
@@ -181,16 +181,27 @@
   }
 
   function renderLineItemCard(item, index, total) {
-    const comps = (item.components || []).map((c) => `
-      <div class="comp-row" data-comp-id="${c.id}">
-        <input type="text" data-comp-field="label" value="${Core.escapeHtml(c.label)}" placeholder="Freight, import duty, DG surcharge..." />
-        <select data-comp-field="type">
-          <option value="fixed" ${c.type === 'fixed' ? 'selected' : ''}>Fixed amount</option>
-          <option value="percent" ${c.type === 'percent' ? 'selected' : ''}>% of running cost</option>
-        </select>
-        <input type="number" step="0.01" data-comp-field="value" value="${c.value}" />
-        <button type="button" class="icon-btn" data-remove-comp aria-label="Remove component">✕</button>
-      </div>`).join('');
+    const comps = (item.components || []).map((c) => {
+      const isFixed = c.type !== 'percent';
+      return `
+      <div class="comp-block" data-comp-id="${c.id}">
+        <div class="comp-row-top">
+          <input type="text" data-comp-field="label" value="${Core.escapeHtml(c.label)}" placeholder="Freight, import duty, DG surcharge..." />
+          <select data-comp-field="type">
+            <option value="fixed" ${isFixed ? 'selected' : ''}>Fixed amount</option>
+            <option value="percent" ${!isFixed ? 'selected' : ''}>% of running cost</option>
+          </select>
+          <button type="button" class="icon-btn" data-remove-comp aria-label="Remove component">✕</button>
+        </div>
+        <div class="comp-row-fields${isFixed ? '' : ' percent-only'}">
+          <input type="number" step="0.01" data-comp-field="value" value="${c.value}" placeholder="${isFixed ? 'Amount' : '%'}" />
+          ${isFixed ? `
+          <input type="text" data-comp-field="currency" value="${Core.escapeHtml(c.currency || state.quotation.baseCurrency)}" placeholder="Currency" />
+          <input type="number" step="0.0001" min="0" data-comp-field="exchangeRate" value="${c.exchangeRate != null ? c.exchangeRate : 1}" placeholder="Exch. rate" />
+          ` : ''}
+        </div>
+      </div>`;
+    }).join('');
 
     return `
       <div class="li-card card" data-item-id="${item.id}">
@@ -348,7 +359,7 @@
       const comp = item.components.find((c) => c.id === compRow.dataset.compId);
       if (!comp) return;
       const field = compFieldTarget.dataset.compField;
-      comp[field] = field === 'value' ? Number(compFieldTarget.value) || 0 : compFieldTarget.value;
+      comp[field] = (field === 'value' || field === 'exchangeRate') ? Number(compFieldTarget.value) || 0 : compFieldTarget.value;
       updateComputedOnly(item.id);
       updateTotals();
       saveDraftLocal();
@@ -375,7 +386,7 @@
     const comp = item && item.components.find((c) => c.id === compRow.dataset.compId);
     if (!comp) return;
     comp.type = typeSelect.value;
-    updateComputedOnly(item.id);
+    renderLineItems(); // fixed vs. percent shows different fields (currency/rate) — needs a full re-render
     updateTotals();
     saveDraftLocal();
   });
