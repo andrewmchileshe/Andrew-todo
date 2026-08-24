@@ -169,6 +169,10 @@
         renderAll();
         switchView('editor');
         setSaveStatus('Converted from ' + quote.quoteNumber + ' — review line items, then Save.');
+        // The conversion actually happened (confirmed, number assigned) — that's the
+        // real signal the quote succeeded, so mark it won now rather than in quotes.js
+        // where we couldn't yet tell if the user would cancel the confirm() above.
+        global.QuotesModule.markQuoteWonIfUndecided(quote.id);
       })
       .catch((err) => setSaveStatus('Could not assign a number: ' + err.message, true))
       .finally(() => { state.assigning = false; });

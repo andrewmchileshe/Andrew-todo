@@ -65,6 +65,7 @@
         <button type="button" id="navQuotesBtn">Quotes</button>
         <button type="button" id="navAcknowledgementsBtn">Acknowledgements</button>
         <button type="button" id="navCatalogBtn">Catalog</button>
+        <button type="button" id="navReportsBtn">Reports</button>
       </div>
 
       <!-- ===================== DASHBOARD ===================== -->
@@ -94,12 +95,15 @@
             <span class="dashboard-card-title">Order History</span>
             <span class="dashboard-card-desc">Look up a saved Acknowledgement</span>
           </button>
-          <button type="button" class="dashboard-card wide" data-dash-action="catalog">
+          <button type="button" class="dashboard-card" data-dash-action="catalog">
             <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3H4a1 1 0 0 0-1 1v5.59a2 2 0 0 0 .59 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.59-4.59a2 2 0 0 0 0-2.83Z"/><circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none"/></svg></span>
-            <span>
-              <span class="dashboard-card-title">Product Catalog</span><br>
-              <span class="dashboard-card-desc">Manage saved items and pricing shared across all three companies</span>
-            </span>
+            <span class="dashboard-card-title">Product Catalog</span>
+            <span class="dashboard-card-desc">Manage saved items and pricing</span>
+          </button>
+          <button type="button" class="dashboard-card" data-dash-action="reports">
+            <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></span>
+            <span class="dashboard-card-title">Reports</span>
+            <span class="dashboard-card-desc">Quote success rate and follow-ups</span>
           </button>
         </div>
       </div>
@@ -160,6 +164,23 @@
             </div>
             <div class="totals-row"><span>Tax amount</span><span id="quoteTaxAmountDisplay">—</span></div>
             <div class="totals-row grand"><span>Grand total</span><span id="quoteGrandTotalDisplay">—</span></div>
+          </div>
+
+          <div class="card">
+            <div class="doc-meta-row">
+              <h2 style="margin:0;">Tracking</h2>
+              <span class="badge tracking-not-sent" id="quoteTrackingBadge">Not sent</span>
+            </div>
+            <div class="form-grid">
+              <label>Sent date<input type="date" id="quoteSentDateInput"></label>
+              <label>Decided date<input type="date" id="quoteOutcomeDateInput"></label>
+            </div>
+            <div class="action-row" style="margin-top:12px;">
+              <button type="button" class="pill-btn secondary" id="quoteMarkSentBtn">Mark as sent</button>
+              <button type="button" class="pill-btn" id="quoteMarkWonBtn">Won</button>
+              <button type="button" class="pill-btn secondary" id="quoteMarkLostBtn">Lost</button>
+              <button type="button" class="text-btn" id="quoteClearOutcomeBtn" style="flex:none;">Clear outcome</button>
+            </div>
           </div>
 
           <div class="card">
@@ -296,6 +317,30 @@
         </div>
       </div>
 
+      <!-- ===================== REPORTS ===================== -->
+      <div id="reportsSection" style="display:none;">
+        <div class="card">
+          <h2>Quote success rate</h2>
+          <div class="stat-grid cols-3">
+            <div class="stat-tile"><div class="stat-value" id="reportSentCount">0</div><div class="stat-label">Sent</div></div>
+            <div class="stat-tile won"><div class="stat-value" id="reportWonCount">0</div><div class="stat-label">Won</div></div>
+            <div class="stat-tile lost"><div class="stat-value" id="reportLostCount">0</div><div class="stat-label">Lost</div></div>
+            <div class="stat-tile pending"><div class="stat-value" id="reportPendingCount">0</div><div class="stat-label">Awaiting decision</div></div>
+            <div class="stat-tile"><div class="stat-value" id="reportWinRate">—</div><div class="stat-label">Win rate</div></div>
+            <div class="stat-tile"><div class="stat-value" id="reportNotSentCount">0</div><div class="stat-label">Draft / not sent</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Value</h2>
+          <div id="reportValueList"></div>
+        </div>
+        <div class="card">
+          <h2>Awaiting a decision</h2>
+          <div id="reportFollowUpList"></div>
+          <p class="empty-state" id="reportFollowUpEmptyState">Nothing awaiting a decision.</p>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -396,5 +441,6 @@
   <script src="catalog.js"></script>
   <script src="quotes.js"></script>
   <script src="oa.js"></script>
+  <script src="reports.js"></script>
 </body>
 </html>

@@ -385,6 +385,30 @@ textarea { resize: vertical; min-height: 56px; }
 .badge.final { background: rgba(52, 199, 89, 0.18); color: var(--low); }
 .badge.admin { background: rgba(0, 122, 255, 0.18); color: var(--accent); }
 
+.badge.tracking-not-sent { background: var(--field-bg); color: var(--text-secondary); }
+.badge.tracking-sent { background: rgba(255, 149, 0, 0.16); color: var(--medium); }
+.badge.tracking-won { background: rgba(52, 199, 89, 0.18); color: var(--low); }
+.badge.tracking-lost { background: rgba(255, 59, 48, 0.14); color: var(--high); }
+
+/* ---------- reports ---------- */
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.stat-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.stat-tile {
+  background: var(--field-bg);
+  border-radius: 14px;
+  padding: 14px;
+  text-align: center;
+}
+.stat-tile .stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+.stat-tile.won .stat-value { color: var(--low); }
+.stat-tile.lost .stat-value { color: var(--high); }
+.stat-tile.pending .stat-value { color: var(--medium); }
+.stat-tile .stat-label { font-size: 11.5px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.03em; margin-top: 4px; }
+
+@media (max-width: 480px) {
+  .stat-grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;

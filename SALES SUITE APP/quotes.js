@@ -26,6 +26,14 @@
   const clientAddressInput = el('quoteClientAddressInput');
   const notesInput = el('quoteNotesInput');
 
+  const trackingBadge = el('quoteTrackingBadge');
+  const sentDateInput = el('quoteSentDateInput');
+  const outcomeDateInput = el('quoteOutcomeDateInput');
+  const markSentBtn = el('quoteMarkSentBtn');
+  const markWonBtn = el('quoteMarkWonBtn');
+  const markLostBtn = el('quoteMarkLostBtn');
+  const clearOutcomeBtn = el('quoteClearOutcomeBtn');
+
   const lineItemsContainer = el('quoteLineItemsContainer');
   const addLineItemBtn = el('quoteAddLineItemBtn');
 
@@ -61,8 +69,20 @@
       validUntil: '',
       notes: '',
       outputTaxPercent: 0,
-      lineItems: []
+      lineItems: [],
+      sentDate: '',
+      outcome: '',
+      outcomeDate: ''
     };
+  }
+
+  // 'won' / 'lost' only mean anything once sentDate is set; a quote can't be won or
+  // lost before it's actually been sent to the customer.
+  function trackingStatus(q) {
+    if (q.outcome === 'won') return 'won';
+    if (q.outcome === 'lost') return 'lost';
+    if (q.sentDate) return 'sent';
+    return 'not-sent';
   }
 
   function blankLineItem() {
@@ -118,6 +138,20 @@
     clientAddressInput.value = state.quotation.client.address || '';
     notesInput.value = state.quotation.notes || '';
     outputTaxInput.value = state.quotation.outputTaxPercent || 0;
+    renderTracking();
+  }
+
+  const TRACKING_LABELS = { 'not-sent': 'Not sent', sent: 'Sent — awaiting decision', won: 'Won', lost: 'Lost' };
+  function renderTracking() {
+    const status = trackingStatus(state.quotation);
+    trackingBadge.textContent = TRACKING_LABELS[status];
+    trackingBadge.className = 'badge tracking-' + status;
+    sentDateInput.value = state.quotation.sentDate || '';
+    outcomeDateInput.value = state.quotation.outcomeDate || '';
+    markSentBtn.style.display = status === 'not-sent' ? '' : 'none';
+    markWonBtn.style.display = status === 'sent' ? '' : 'none';
+    markLostBtn.style.display = status === 'sent' ? '' : 'none';
+    clearOutcomeBtn.style.display = (status === 'won' || status === 'lost') ? '' : 'none';
   }
 
   // ---------- rendering: line items ----------
@@ -245,6 +279,34 @@
     saveDraftLocal();
   });
 
+  // ---------- tracking (sent / won / lost) ----------
+  sentDateInput.addEventListener('input', () => { state.quotation.sentDate = sentDateInput.value; renderTracking(); saveDraftLocal(); });
+  outcomeDateInput.addEventListener('input', () => { state.quotation.outcomeDate = outcomeDateInput.value; saveDraftLocal(); });
+
+  markSentBtn.addEventListener('click', () => {
+    state.quotation.sentDate = state.quotation.sentDate || Core.todayIso();
+    renderTracking();
+    saveQuotation();
+  });
+  markWonBtn.addEventListener('click', () => {
+    state.quotation.outcome = 'won';
+    state.quotation.outcomeDate = state.quotation.outcomeDate || Core.todayIso();
+    renderTracking();
+    saveQuotation();
+  });
+  markLostBtn.addEventListener('click', () => {
+    state.quotation.outcome = 'lost';
+    state.quotation.outcomeDate = state.quotation.outcomeDate || Core.todayIso();
+    renderTracking();
+    saveQuotation();
+  });
+  clearOutcomeBtn.addEventListener('click', () => {
+    state.quotation.outcome = '';
+    state.quotation.outcomeDate = '';
+    renderTracking();
+    saveQuotation();
+  });
+
   // ---------- line item events (delegated so typing never loses focus) ----------
   lineItemsContainer.addEventListener('input', (e) => {
     const card = e.target.closest('[data-item-id]');
@@ -366,6 +428,9 @@
       notes: state.quotation.notes,
       outputTaxPercent: state.quotation.outputTaxPercent,
       lineItems: state.quotation.lineItems,
+      sentDate: state.quotation.sentDate || '',
+      outcome: state.quotation.outcome || '',
+      outcomeDate: state.quotation.outcomeDate || '',
       subtotal: totals.subtotal,
       taxAmount: totals.taxAmount,
       grandTotal: totals.grandTotal,
@@ -432,6 +497,9 @@
       validUntil: doc.validUntil || '',
       notes: doc.notes || '',
       outputTaxPercent: doc.outputTaxPercent || 0,
+      sentDate: doc.sentDate || '',
+      outcome: doc.outcome || '',
+      outcomeDate: doc.outcomeDate || '',
       lineItems: (doc.lineItems || []).map((li) => Object.assign({}, li, {
         id: li.id || Core.uid(),
         components: (li.components || []).map((c) => Object.assign({}, c, { id: c.id || Core.uid() }))
@@ -450,10 +518,12 @@
 
     historyEmptyState.style.display = filtered.length ? 'none' : 'block';
 
-    historyListEl.innerHTML = filtered.map((item) => `
+    historyListEl.innerHTML = filtered.map((item) => {
+      const tracking = trackingStatus(item);
+      return `
       <div class="history-row" data-history-id="${item.id}">
         <div class="history-main">
-          <div class="history-title">${Core.escapeHtml(item.quoteNumber)} <span class="badge ${item.status}">${item.status}</span></div>
+          <div class="history-title">${Core.escapeHtml(item.quoteNumber)} <span class="badge ${item.status}">${item.status}</span> <span class="badge tracking-${tracking}">${Core.escapeHtml(TRACKING_LABELS[tracking])}</span></div>
           <div class="history-sub">${Core.escapeHtml((item.client && item.client.name) || 'No client')} · ${Core.escapeHtml(item.quoteDate || '')}</div>
         </div>
         <div class="history-total">${item.baseCurrency} ${Core.fmt(item.grandTotal)}</div>
@@ -463,7 +533,31 @@
           <button type="button" class="text-btn" data-duplicate-history>Duplicate</button>
           <button type="button" class="text-btn danger" data-delete-history>Delete</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
+  }
+
+  // Called by oa.js once a quote→OA conversion actually completes (not just attempted —
+  // the confirm() may have been cancelled, or number assignment may have failed), since
+  // converting to an order is the strongest signal a quote succeeded.
+  function markQuoteWonIfUndecided(quoteId) {
+    const item = state.historyItems.find((i) => i.id === quoteId);
+    if (item && item.outcome) return; // already decided — don't overwrite Lost, etc.
+    companyCollection().doc(quoteId).set({
+      outcome: 'won',
+      outcomeDate: Core.todayIso(),
+      sentDate: (item && item.sentDate) || Core.todayIso(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(() => {});
+  }
+
+  // Shared by the history "Open" button and Reports' follow-up list, so both land in
+  // the same place with the same behavior.
+  function openQuote(item) {
+    state.quotation = normalizeLoadedQuotation(item);
+    renderAll();
+    switchView('editor');
+    setSaveStatus('');
   }
 
   historyListEl.addEventListener('click', (e) => {
@@ -474,10 +568,7 @@
     if (!item) return;
 
     if (e.target.closest('[data-open-history]')) {
-      state.quotation = normalizeLoadedQuotation(item);
-      renderAll();
-      switchView('editor');
-      setSaveStatus('');
+      openQuote(item);
     } else if (e.target.closest('[data-convert-history]')) {
       global.OAModule.startFromQuote(normalizeLoadedQuotation(item));
       document.getElementById('navAcknowledgementsBtn').click();
@@ -510,6 +601,9 @@
   navHistoryBtn.addEventListener('click', () => switchView('history'));
 
   // ---------- company-scoped Firestore subscription ----------
+  const historyChangeCallbacks = [];
+  function onHistoryChange(cb) { historyChangeCallbacks.push(cb); }
+
   Core.onCompanyChange(() => {
     if (state.historyUnsub) { state.historyUnsub(); state.historyUnsub = null; }
     state.historyItems = [];
@@ -519,6 +613,7 @@
       .onSnapshot((snap) => {
         state.historyItems = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
         renderHistory();
+        historyChangeCallbacks.forEach((cb) => cb(state.historyItems));
       }, (err) => {
         setSaveStatus('History sync error: ' + err.message, true);
       });
@@ -529,5 +624,5 @@
   renderHistory();
   switchView('editor');
 
-  global.QuotesModule = { blankQuotation, renderAll, saveDraftLocal, state };
+  global.QuotesModule = { blankQuotation, renderAll, saveDraftLocal, openQuote, onHistoryChange, trackingStatus, markQuoteWonIfUndecided, state };
 })(window);

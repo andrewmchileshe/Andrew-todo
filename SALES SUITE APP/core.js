@@ -33,10 +33,12 @@
   const navQuotesBtn = el('navQuotesBtn');
   const navAcknowledgementsBtn = el('navAcknowledgementsBtn');
   const navCatalogBtn = el('navCatalogBtn');
+  const navReportsBtn = el('navReportsBtn');
   const dashboardSection = el('dashboardSection');
   const quotesSection = el('quotesSection');
   const acknowledgementsSection = el('acknowledgementsSection');
   const catalogSection = el('catalogSection');
+  const reportsSection = el('reportsSection');
   const dashboardGreetingText = el('dashboardGreetingText');
   const dashboardGrid = document.querySelector('.dashboard-grid');
 
@@ -302,15 +304,18 @@
     quotesSection.style.display = view === 'quotes' ? '' : 'none';
     acknowledgementsSection.style.display = view === 'acknowledgements' ? '' : 'none';
     catalogSection.style.display = view === 'catalog' ? '' : 'none';
+    reportsSection.style.display = view === 'reports' ? '' : 'none';
     navDashboardBtn.classList.toggle('active', view === 'dashboard');
     navQuotesBtn.classList.toggle('active', view === 'quotes');
     navAcknowledgementsBtn.classList.toggle('active', view === 'acknowledgements');
     navCatalogBtn.classList.toggle('active', view === 'catalog');
+    navReportsBtn.classList.toggle('active', view === 'reports');
   }
   navDashboardBtn.addEventListener('click', () => switchTopNav('dashboard'));
   navQuotesBtn.addEventListener('click', () => switchTopNav('quotes'));
   navAcknowledgementsBtn.addEventListener('click', () => switchTopNav('acknowledgements'));
   navCatalogBtn.addEventListener('click', () => switchTopNav('catalog'));
+  navReportsBtn.addEventListener('click', () => switchTopNav('reports'));
 
   // ---------- dashboard quick actions ----------
   // Each card just jumps to the relevant tab/sub-view (Editor or History) by forwarding a
@@ -338,6 +343,9 @@
         break;
       case 'catalog':
         switchTopNav('catalog');
+        break;
+      case 'reports':
+        switchTopNav('reports');
         break;
     }
   });
