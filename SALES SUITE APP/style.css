@@ -270,6 +270,17 @@ textarea { resize: vertical; min-height: 56px; }
 
 .text-btn.danger { color: var(--high); }
 
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin: 10px 0;
+  cursor: pointer;
+}
+.checkbox-row input[type="checkbox"] { width: auto; flex: none; }
+
 .margin-row { display: flex; align-items: center; gap: 10px; }
 .margin-row input { max-width: 100px; }
 

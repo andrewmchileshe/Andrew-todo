@@ -4,9 +4,23 @@
     return Math.round((n + Number.EPSILON) * 100) / 100;
   }
 
-  // cost (converted to base currency) -> walk components (freight, duty, surcharges...) -> landed cost -> margin/markup -> selling price
+  // cost (converted to base currency) -> walk components (freight, duty, surcharges...) -> landed cost -> margin/markup -> selling price.
+  // A line can opt out of the build-up entirely with priceOverride — used when the
+  // selling price was already agreed and there's nothing to calculate.
   function computeLineItem(item) {
     const qty = Number(item.qty) || 0;
+
+    if (item.priceOverride) {
+      const unitSellingPrice = round2(Number(item.overridePrice) || 0);
+      return {
+        costInBase: 0,
+        landedCost: 0,
+        unitSellingPrice: unitSellingPrice,
+        lineTotal: round2(unitSellingPrice * qty),
+        breakdown: [{ label: 'Manual price', amount: unitSellingPrice, runningSubtotal: unitSellingPrice }]
+      };
+    }
+
     const costPrice = Number(item.costPrice) || 0;
     const exchangeRate = Number(item.exchangeRate) || 1;
     const costInBase = costPrice * exchangeRate;

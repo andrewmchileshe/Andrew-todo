@@ -4,7 +4,7 @@
 // visible error on save failure instead of a silently-stuck button.
 (function (global) {
   const Core = global.Core;
-  const NUMERIC_FIELDS = ['qty', 'exchangeRate', 'costPrice', 'marginValue'];
+  const NUMERIC_FIELDS = ['qty', 'exchangeRate', 'costPrice', 'marginValue', 'overridePrice'];
   const DRAFT_KEY = 'sales-suite-quote-draft-v1';
 
   const el = (id) => document.getElementById(id);
@@ -95,7 +95,9 @@
       costPrice: 0,
       components: [],
       marginMethod: 'margin',
-      marginValue: 0
+      marginValue: 0,
+      priceOverride: false,
+      overridePrice: 0
     };
   }
 
@@ -158,6 +160,12 @@
   function renderComputedHtml(item) {
     const c = Pricing.computeLineItem(item);
     const currency = state.quotation.baseCurrency;
+    if (item.priceOverride) {
+      return `
+        <div class="li-summary-row"><span>Unit selling price (manual)</span><strong>${currency} ${Core.fmt(c.unitSellingPrice)}</strong></div>
+        <div class="li-summary-row total"><span>Line total (×${Number(item.qty) || 0})</span><strong>${currency} ${Core.fmt(c.lineTotal)}</strong></div>
+      `;
+    }
     const rows = c.breakdown.map((b) => `
       <div class="li-breakdown-row">
         <span>${Core.escapeHtml(b.label)}</span>
@@ -198,6 +206,17 @@
         <input type="text" class="li-desc" data-field="description" placeholder="Item description" value="${Core.escapeHtml(item.description)}" />
         <button type="button" class="text-btn" data-pick-catalog>Pick from catalog</button>
 
+        <label class="checkbox-row">
+          <input type="checkbox" data-field-checkbox="priceOverride" ${item.priceOverride ? 'checked' : ''} />
+          Manual price — skip the cost build-up and type the selling price directly
+        </label>
+
+        ${item.priceOverride ? `
+        <div class="li-grid" style="grid-template-columns: 1fr 1fr;">
+          <label>Qty<input type="number" min="0" step="1" data-field="qty" value="${item.qty}" /></label>
+          <label>Selling price<input type="number" min="0" step="0.01" data-field="overridePrice" value="${item.overridePrice}" /></label>
+        </div>
+        ` : `
         <div class="li-grid">
           <label>Qty<input type="number" min="0" step="1" data-field="qty" value="${item.qty}" /></label>
           <label>Source currency<input type="text" data-field="sourceCurrency" value="${Core.escapeHtml(item.sourceCurrency)}" /></label>
@@ -217,6 +236,7 @@
           </div>
           <input type="number" min="0" step="0.01" data-field="marginValue" value="${item.marginValue}" />
         </div>
+        `}
 
         <div class="li-computed" data-computed>${renderComputedHtml(item)}</div>
       </div>`;
@@ -336,6 +356,17 @@
   });
 
   lineItemsContainer.addEventListener('change', (e) => {
+    const overrideCheckbox = e.target.closest('[data-field-checkbox="priceOverride"]');
+    if (overrideCheckbox) {
+      const card = e.target.closest('[data-item-id]');
+      const item = state.quotation.lineItems.find((i) => i.id === card.dataset.itemId);
+      if (!item) return;
+      item.priceOverride = overrideCheckbox.checked;
+      renderLineItems(); // structure changes (calculator vs. manual field) — needs a full re-render
+      updateTotals();
+      saveDraftLocal();
+      return;
+    }
     const typeSelect = e.target.closest('[data-comp-field="type"]');
     if (!typeSelect) return;
     const card = e.target.closest('[data-item-id]');
@@ -362,6 +393,7 @@
         item.costPrice = catalogItem.costPrice;
         item.marginMethod = catalogItem.marginMethod;
         item.marginValue = catalogItem.marginValue;
+        item.priceOverride = false;
         renderLineItems(); updateTotals(); saveDraftLocal();
       });
       return;

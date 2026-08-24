@@ -308,6 +308,7 @@
         <div class="card">
           <div class="action-row">
             <input type="text" id="catalogSearchInput" placeholder="Search by item code or description" style="flex:1;">
+            <button type="button" class="pill-btn secondary" id="catalogBulkUploadBtn" style="flex:none;">Bulk upload</button>
             <button type="button" class="pill-btn" id="catalogAddBtn" style="flex:none;">+ Add item</button>
           </div>
         </div>
@@ -425,6 +426,23 @@
       <input type="text" id="catalogPickerSearchInput" placeholder="Search by item code or description">
       <div id="catalogPickerList" style="margin-top:12px; max-height:320px; overflow-y:auto;"></div>
       <p class="empty-state" id="catalogPickerEmptyState">No catalog items yet — add some from the Catalog tab.</p>
+    </div>
+  </div>
+
+  <!-- ---------- Catalog bulk upload modal ---------- -->
+  <div class="modal-overlay" id="catalogBulkUploadModal">
+    <div class="modal-card">
+      <button class="modal-close" id="catalogBulkUploadModalClose" aria-label="Close">✕</button>
+      <h2>Bulk upload catalog items</h2>
+      <p class="sub">A CSV file with a header row. Columns (any order, case-insensitive): <strong>itemCode, description, unit, costPrice, costCurrency, marginMethod (margin/markup), marginValue, sellingPrice, sellingCurrency</strong>. Only <strong>description</strong> is required — everything else defaults sensibly if left blank. This always adds new items; it doesn't update or replace existing ones.</p>
+      <button type="button" class="text-btn" id="catalogDownloadTemplateBtn">Download a CSV template</button>
+      <p class="field-label">CSV file</p>
+      <input type="file" accept=".csv,text/csv" id="catalogBulkFileInput">
+      <p class="save-status-text" id="catalogBulkStatusText"></p>
+      <div id="catalogBulkPreview" style="display:none; margin-top:12px;">
+        <p class="field-label" id="catalogBulkPreviewCount"></p>
+        <button type="button" class="pill-btn" id="catalogBulkConfirmBtn" style="width:100%;">Import</button>
+      </div>
     </div>
   </div>
 
