@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #14213d;
+
+  /* Labmall Scientific brand palette */
+  --color-navy: #204080;
+  --color-navy-dark: #0c1b3a;
+  --color-green: #60b050;
+  --color-green-dark: #4a8c3d;
+  --color-sky: #3d5faa;
+  --color-grey-light: #f4f6fa;
+  --color-grey-mid: #6b7a8d;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --color-navy: var(--color-navy);
+  --color-navy-dark: var(--color-navy-dark);
+  --color-green: var(--color-green);
+  --color-green-dark: var(--color-green-dark);
+  --color-sky: var(--color-sky);
+  --color-grey-light: var(--color-grey-light);
+  --color-grey-mid: var(--color-grey-mid);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Layered so Tailwind utility classes (e.g. text-white) can still
+   override these defaults — unlayered rules always beat layered ones
+   regardless of specificity. */
+@layer base {
+  h1, h2, h3, h4 {
+    color: var(--color-navy-dark);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+.container-page {
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.section-y {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+.badge-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: color-mix(in srgb, var(--color-green) 15%, white);
+  color: var(--color-green-dark);
+  border: 1px solid color-mix(in srgb, var(--color-green) 35%, white);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+}
+
+.badge-rfq {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: color-mix(in srgb, var(--color-navy) 10%, white);
+  color: var(--color-navy);
+  border: 1px solid color-mix(in srgb, var(--color-navy) 25%, white);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--color-green);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.btn-primary:hover {
+  background: var(--color-green-dark);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  transition: background-color 0.15s ease;
+}
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.btn-outline-navy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--color-navy);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: 1.5px solid var(--color-navy);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.btn-outline-navy:hover {
+  background: var(--color-navy);
+  color: white;
+}
