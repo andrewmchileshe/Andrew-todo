@@ -134,26 +134,28 @@
         item.description || '',
         item.itemCode || '',
         String(item.qty || 0),
-        quotation.baseCurrency + ' ' + fmt(computed.unitSellingPrice),
-        quotation.baseCurrency + ' ' + fmt(computed.lineTotal),
+        fmt(computed.unitSellingPrice),
+        fmt(computed.lineTotal),
         item.leadTime || ''
       ];
     });
 
+    // Currency is stated once, in the column header — the quote's currency is already
+    // shown in the info grid above, so repeating it against every row is just noise.
     doc.autoTable({
       startY: y,
-      head: [['Description', 'Item Code', 'Qty', 'Unit Price', 'Line Total', 'Lead Time']],
+      head: [['Description', 'Item Code', 'Qty', 'Unit Price (' + quotation.baseCurrency + ')', 'Line Total (' + quotation.baseCurrency + ')', 'Lead Time']],
       body: rows,
       margin: { left: marginX, right: marginX },
       styles: { fontSize: 9, valign: 'middle', cellPadding: 4.5, lineColor: [210, 210, 210], lineWidth: 0.5 },
-      headStyles: { fillColor: NAVY, textColor: 255, fontStyle: 'bold', fontSize: 9 },
+      headStyles: { fillColor: NAVY, textColor: 255, fontStyle: 'bold', fontSize: 8 },
       columnStyles: {
         0: { halign: 'left' },
-        1: { halign: 'left', cellWidth: 65 },
-        2: { halign: 'right', cellWidth: 35 },
+        1: { halign: 'left', cellWidth: 48 },
+        2: { halign: 'right', cellWidth: 28 },
         3: { halign: 'right' },
         4: { halign: 'right' },
-        5: { halign: 'left', cellWidth: 60 }
+        5: { halign: 'left', cellWidth: 55 }
       }
     });
 
