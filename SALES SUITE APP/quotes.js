@@ -94,6 +94,8 @@
     return {
       id: Core.uid(),
       description: '',
+      itemCode: '',
+      leadTime: '',
       qty: 1,
       sourceCurrency: state.quotation.baseCurrency || 'ZMW',
       exchangeRate: 1,
@@ -224,6 +226,11 @@
 
         <input type="text" class="li-desc" data-field="description" placeholder="Item description" value="${Core.escapeHtml(item.description)}" />
         <button type="button" class="text-btn" data-pick-catalog>Pick from catalog</button>
+
+        <div class="li-grid" style="grid-template-columns: 1fr 1fr;">
+          <label>Product code<input type="text" data-field="itemCode" value="${Core.escapeHtml(item.itemCode)}" /></label>
+          <label>Lead time<input type="text" data-field="leadTime" placeholder="3-4 weeks" value="${Core.escapeHtml(item.leadTime)}" /></label>
+        </div>
 
         <label class="checkbox-row">
           <input type="checkbox" data-field-checkbox="priceOverride" ${item.priceOverride ? 'checked' : ''} />
@@ -430,6 +437,7 @@
       // line is already in when you pick decides which one gets filled.
       CatalogModule.openPicker((catalogItem) => {
         item.description = catalogItem.description;
+        item.itemCode = catalogItem.itemCode || '';
         if (item.priceOverride) {
           item.overridePrice = catalogItem.sellingPrice;
           if (catalogItem.sellingCurrency && catalogItem.sellingCurrency !== state.quotation.baseCurrency) {

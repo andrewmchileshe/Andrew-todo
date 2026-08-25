@@ -132,24 +132,28 @@
       const computed = global.Pricing.computeLineItem(item);
       return [
         item.description || '',
+        item.itemCode || '',
         String(item.qty || 0),
         quotation.baseCurrency + ' ' + fmt(computed.unitSellingPrice),
-        quotation.baseCurrency + ' ' + fmt(computed.lineTotal)
+        quotation.baseCurrency + ' ' + fmt(computed.lineTotal),
+        item.leadTime || ''
       ];
     });
 
     doc.autoTable({
       startY: y,
-      head: [['Description', 'Qty', 'Unit Price', 'Line Total']],
+      head: [['Description', 'Item Code', 'Qty', 'Unit Price', 'Line Total', 'Lead Time']],
       body: rows,
       margin: { left: marginX, right: marginX },
       styles: { fontSize: 9, valign: 'middle', cellPadding: 4.5, lineColor: [210, 210, 210], lineWidth: 0.5 },
       headStyles: { fillColor: NAVY, textColor: 255, fontStyle: 'bold', fontSize: 9 },
       columnStyles: {
         0: { halign: 'left' },
-        1: { halign: 'right', cellWidth: 45 },
-        2: { halign: 'right' },
-        3: { halign: 'right' }
+        1: { halign: 'left', cellWidth: 65 },
+        2: { halign: 'right', cellWidth: 35 },
+        3: { halign: 'right' },
+        4: { halign: 'right' },
+        5: { halign: 'left', cellWidth: 60 }
       }
     });
 
