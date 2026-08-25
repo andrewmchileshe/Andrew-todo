@@ -363,10 +363,23 @@
         item.description = catalogItem.description;
         item.itemCode = catalogItem.itemCode;
         item.unit = catalogItem.unit;
-        item.unitPrice = catalogItem.sellingPrice;
-        if (state.oa.lineItems.length === 1) {
-          state.oa.currency = catalogItem.sellingCurrency;
-          renderHeader();
+        if (catalogItem.sellingPrice) {
+          item.unitPrice = catalogItem.sellingPrice;
+          if (state.oa.lineItems.length === 1) {
+            state.oa.currency = catalogItem.sellingCurrency;
+            renderHeader();
+          }
+        } else {
+          // No standalone selling price on this catalog item — a hard 0 would silently
+          // wipe out whatever price was already on the line, so fall back to a price
+          // computed from its cost + margin and flag it for review instead.
+          item.unitPrice = Pricing.computeLineItem({
+            qty: 1, costPrice: catalogItem.costPrice, exchangeRate: 1, components: [],
+            marginMethod: catalogItem.marginMethod, marginValue: catalogItem.marginValue
+          }).unitSellingPrice;
+          setSaveStatus('This catalog item has no default selling price set — used ' +
+            (catalogItem.costCurrency || state.oa.currency) + ' ' + Core.fmt(item.unitPrice) +
+            ' computed from its cost + margin instead. Please double-check.', true);
         }
         renderLineItems(); updateTotals(); saveDraftLocal();
       });
@@ -519,7 +532,7 @@
         </div>
         <div class="history-total">${item.currency} ${Core.fmt(item.total)}</div>
         <div class="history-actions">
-          <button type="button" class="text-btn" data-open-history>Open</button>
+          <button type="button" class="text-btn" data-open-history>Edit</button>
           <button type="button" class="text-btn danger" data-delete-history>Delete</button>
         </div>
       </div>`).join('');

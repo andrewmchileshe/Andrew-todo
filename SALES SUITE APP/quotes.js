@@ -439,10 +439,24 @@
         item.description = catalogItem.description;
         item.itemCode = catalogItem.itemCode || '';
         if (item.priceOverride) {
-          item.overridePrice = catalogItem.sellingPrice;
-          if (catalogItem.sellingCurrency && catalogItem.sellingCurrency !== state.quotation.baseCurrency) {
-            setSaveStatus('Pulled ' + catalogItem.sellingCurrency + ' ' + Core.fmt(catalogItem.sellingPrice) +
-              ' as-is — quote currency is ' + state.quotation.baseCurrency + ', so double-check this price.', true);
+          if (catalogItem.sellingPrice) {
+            item.overridePrice = catalogItem.sellingPrice;
+            if (catalogItem.sellingCurrency && catalogItem.sellingCurrency !== state.quotation.baseCurrency) {
+              setSaveStatus('Pulled ' + catalogItem.sellingCurrency + ' ' + Core.fmt(catalogItem.sellingPrice) +
+                ' as-is — quote currency is ' + state.quotation.baseCurrency + ', so double-check this price.', true);
+            }
+          } else {
+            // This catalog item has no standalone selling price set — falling back to a
+            // hard 0 would silently wipe out whatever price was already on the line, so
+            // compute a stand-in from its cost + margin instead and flag it for review.
+            const suggested = Pricing.computeLineItem({
+              qty: 1, costPrice: catalogItem.costPrice, exchangeRate: 1, components: [],
+              marginMethod: catalogItem.marginMethod, marginValue: catalogItem.marginValue
+            }).unitSellingPrice;
+            item.overridePrice = suggested;
+            setSaveStatus('This catalog item has no default selling price set — used ' +
+              (catalogItem.costCurrency || state.quotation.baseCurrency) + ' ' + Core.fmt(suggested) +
+              ' computed from its cost + margin instead. Please double-check.', true);
           }
         } else {
           item.sourceCurrency = catalogItem.costCurrency;
@@ -631,9 +645,9 @@
         </div>
         <div class="history-total">${item.baseCurrency} ${Core.fmt(item.grandTotal)}</div>
         <div class="history-actions">
-          <button type="button" class="text-btn" data-open-history>Open</button>
-          <button type="button" class="text-btn" data-convert-history>To OA</button>
-          <button type="button" class="text-btn" data-duplicate-history>Duplicate</button>
+          <button type="button" class="text-btn" data-open-history>Edit</button>
+          <button type="button" class="text-btn" data-convert-history>Convert to OA</button>
+          <button type="button" class="text-btn" data-duplicate-history>Duplicate quote</button>
           <button type="button" class="text-btn danger" data-delete-history>Delete</button>
         </div>
       </div>`;

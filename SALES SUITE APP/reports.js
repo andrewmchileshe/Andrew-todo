@@ -77,7 +77,7 @@
         </div>
         <div class="history-total">${item.baseCurrency} ${Core.fmt(item.grandTotal)}</div>
         <div class="history-actions">
-          <button type="button" class="text-btn" data-open-followup>Open</button>
+          <button type="button" class="text-btn" data-open-followup>Edit</button>
         </div>
       </div>`).join('');
   }
