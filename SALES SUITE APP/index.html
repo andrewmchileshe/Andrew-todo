@@ -141,6 +141,7 @@
                   <option value="ZMW"><option value="USD"><option value="ZAR"><option value="GBP"><option value="EUR">
                 </datalist>
               </label>
+              <label>RFQ reference<input type="text" id="quoteRfqRefInput"></label>
             </div>
 
             <div class="doc-meta-row">
@@ -158,8 +159,14 @@
             </div>
             <label>Address<textarea id="quoteClientAddressInput" rows="2"></textarea></label>
 
-            <p class="field-label">Notes / terms</p>
-            <textarea id="quoteNotesInput" rows="3" placeholder="Payment terms, delivery lead time, etc."></textarea>
+            <p class="field-label">Terms</p>
+            <div class="form-grid">
+              <label>Payment terms<input type="text" id="quotePaymentTermsInput" placeholder="30 Days Net"></label>
+              <label>Incoterms<input type="text" id="quoteIncotermsInput" placeholder="DDP"></label>
+            </div>
+
+            <p class="field-label">Notes</p>
+            <textarea id="quoteNotesInput" rows="3" placeholder="Any other information relevant to this quote"></textarea>
           </div>
 
           <div class="card">

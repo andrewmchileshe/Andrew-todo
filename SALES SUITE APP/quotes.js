@@ -20,11 +20,14 @@
   const quoteDateInput = el('quoteDateInput');
   const validUntilInput = el('quoteValidUntilInput');
   const baseCurrencySelect = el('quoteBaseCurrencySelect');
+  const rfqRefInput = el('quoteRfqRefInput');
   const clientNameInput = el('quoteClientNameInput');
   const clientCompanyInput = el('quoteClientCompanyInput');
   const clientEmailInput = el('quoteClientEmailInput');
   const clientPhoneInput = el('quoteClientPhoneInput');
   const clientAddressInput = el('quoteClientAddressInput');
+  const paymentTermsInput = el('quotePaymentTermsInput');
+  const incotermsInput = el('quoteIncotermsInput');
   const notesInput = el('quoteNotesInput');
   const pickCustomerBtn = el('quotePickCustomerBtn');
   const saveCustomerBtn = el('quoteSaveCustomerBtn');
@@ -70,6 +73,9 @@
       baseCurrency: 'ZMW',
       quoteDate: Core.todayIso(),
       validUntil: '',
+      rfqRef: '',
+      paymentTerms: '',
+      incoterms: '',
       notes: '',
       outputTaxPercent: 0,
       lineItems: [],
@@ -143,11 +149,14 @@
     quoteDateInput.value = state.quotation.quoteDate || '';
     validUntilInput.value = state.quotation.validUntil || '';
     baseCurrencySelect.value = state.quotation.baseCurrency || 'ZMW';
+    rfqRefInput.value = state.quotation.rfqRef || '';
     clientNameInput.value = state.quotation.client.name || '';
     clientCompanyInput.value = state.quotation.client.company || '';
     clientEmailInput.value = state.quotation.client.email || '';
     clientPhoneInput.value = state.quotation.client.phone || '';
     clientAddressInput.value = state.quotation.client.address || '';
+    paymentTermsInput.value = state.quotation.paymentTerms || '';
+    incotermsInput.value = state.quotation.incoterms || '';
     notesInput.value = state.quotation.notes || '';
     outputTaxInput.value = state.quotation.outputTaxPercent || 0;
     renderTracking();
@@ -318,6 +327,9 @@
   clientEmailInput.addEventListener('input', () => { state.quotation.client.email = clientEmailInput.value; saveDraftLocal(); });
   clientPhoneInput.addEventListener('input', () => { state.quotation.client.phone = clientPhoneInput.value; saveDraftLocal(); });
   clientAddressInput.addEventListener('input', () => { state.quotation.client.address = clientAddressInput.value; saveDraftLocal(); });
+  rfqRefInput.addEventListener('input', () => { state.quotation.rfqRef = rfqRefInput.value; saveDraftLocal(); });
+  paymentTermsInput.addEventListener('input', () => { state.quotation.paymentTerms = paymentTermsInput.value; saveDraftLocal(); });
+  incotermsInput.addEventListener('input', () => { state.quotation.incoterms = incotermsInput.value; saveDraftLocal(); });
   notesInput.addEventListener('input', () => { state.quotation.notes = notesInput.value; saveDraftLocal(); });
 
   pickCustomerBtn.addEventListener('click', () => {
@@ -527,6 +539,9 @@
       baseCurrency: state.quotation.baseCurrency,
       quoteDate: state.quotation.quoteDate,
       validUntil: state.quotation.validUntil,
+      rfqRef: state.quotation.rfqRef || '',
+      paymentTerms: state.quotation.paymentTerms || '',
+      incoterms: state.quotation.incoterms || '',
       notes: state.quotation.notes,
       outputTaxPercent: state.quotation.outputTaxPercent,
       lineItems: state.quotation.lineItems,
@@ -603,6 +618,9 @@
       baseCurrency: doc.baseCurrency || 'ZMW',
       quoteDate: doc.quoteDate || Core.todayIso(),
       validUntil: doc.validUntil || '',
+      rfqRef: doc.rfqRef || '',
+      paymentTerms: doc.paymentTerms || '',
+      incoterms: doc.incoterms || '',
       notes: doc.notes || '',
       outputTaxPercent: doc.outputTaxPercent || 0,
       sentDate: doc.sentDate || '',

@@ -99,6 +99,7 @@
       startY: y,
       body: [
         ['Quote No.', quotation.quoteNumber || '—', 'Date Issued', quotation.quoteDate || ''],
+        ['RFQ Ref.', quotation.rfqRef || '—', '', ''],
         ['Valid Until', quotation.validUntil || '—', 'Currency', quotation.baseCurrency || '']
       ],
       theme: 'plain',
@@ -114,10 +115,20 @@
     y = doc.lastAutoTable.finalY + 10;
 
     // ---- prepared for ----
+    // Company name, then address, then a blank spacer line, then "Attention: <contact>"
+    // with the email/phone right under it — matches how staff read a mailing block.
     y = sectionBar(y, 'PREPARED FOR');
     const client = quotation.client || {};
-    const clientLines = [client.company || client.name, client.company ? client.name : '', client.address, client.email, client.phone]
-      .filter(Boolean).join('\n');
+    const clientLineList = [];
+    if (client.company) clientLineList.push(client.company);
+    if (client.address) clientLineList.push(client.address);
+    if (client.name) {
+      if (clientLineList.length) clientLineList.push('');
+      clientLineList.push('Attention: ' + client.name);
+    }
+    if (client.email) clientLineList.push(client.email);
+    if (client.phone) clientLineList.push(client.phone);
+    const clientLines = clientLineList.join('\n');
     doc.setDrawColor(200, 200, 200);
     doc.setFontSize(9);
     const clientTextLines = doc.splitTextToSize(clientLines || '—', rightEdge - marginX - 16);
@@ -142,20 +153,22 @@
 
     // Currency is stated once, in the column header — the quote's currency is already
     // shown in the info grid above, so repeating it against every row is just noise.
+    // A smaller body font plus wider Item Code/Qty columns keeps real-world values —
+    // e.g. "528-028-500" or a 5-digit quantity — from wrapping onto a second line.
     doc.autoTable({
       startY: y,
       head: [['Description', 'Item Code', 'Qty', 'Unit Price (' + quotation.baseCurrency + ')', 'Line Total (' + quotation.baseCurrency + ')', 'Lead Time']],
       body: rows,
       margin: { left: marginX, right: marginX },
-      styles: { fontSize: 9, valign: 'middle', cellPadding: 4.5, lineColor: [210, 210, 210], lineWidth: 0.5 },
-      headStyles: { fillColor: NAVY, textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      styles: { fontSize: 8, valign: 'middle', cellPadding: 4, lineColor: [210, 210, 210], lineWidth: 0.5 },
+      headStyles: { fillColor: NAVY, textColor: 255, fontStyle: 'bold', fontSize: 7.5 },
       columnStyles: {
         0: { halign: 'left' },
-        1: { halign: 'left', cellWidth: 48 },
-        2: { halign: 'right', cellWidth: 28 },
+        1: { halign: 'left', cellWidth: 58 },
+        2: { halign: 'right', cellWidth: 34 },
         3: { halign: 'right' },
         4: { halign: 'right' },
-        5: { halign: 'left', cellWidth: 55 }
+        5: { halign: 'left', cellWidth: 52 }
       }
     });
 
@@ -174,6 +187,21 @@
     doc.text(quotation.baseCurrency + ' ' + fmt(totals.grandTotal), rightEdge, finalY, { align: 'right' });
     doc.setFont(undefined, 'normal');
     y = finalY + 26;
+
+    // ---- terms (payment terms / incoterms — kept separate from free-text notes) ----
+    y = sectionBar(y, 'TERMS');
+    doc.autoTable({
+      startY: y,
+      body: [
+        ['Payment Terms', quotation.paymentTerms || '—'],
+        ['Incoterms', quotation.incoterms || '—']
+      ],
+      theme: 'plain',
+      margin: { left: marginX, right: marginX },
+      styles: { fontSize: 9, cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 130 }, 1: { cellWidth: 'auto' } }
+    });
+    y = doc.lastAutoTable.finalY + 10;
 
     // ---- notes (per-quote free text) ----
     if (quotation.notes) {
