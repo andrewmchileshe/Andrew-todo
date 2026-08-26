@@ -4,7 +4,7 @@
 // visible error on save failure instead of a silently-stuck button.
 (function (global) {
   const Core = global.Core;
-  const NUMERIC_FIELDS = ['qty', 'exchangeRate', 'costPrice', 'marginValue', 'overridePrice'];
+  const NUMERIC_FIELDS = ['qty', 'exchangeRate', 'costPrice', 'marginValue', 'overridePrice', 'discountValue'];
   const DRAFT_KEY = 'sales-suite-quote-draft-v1';
 
   const el = (id) => document.getElementById(id);
@@ -43,8 +43,11 @@
   const lineItemsContainer = el('quoteLineItemsContainer');
   const addLineItemBtn = el('quoteAddLineItemBtn');
 
+  const discountToggle = el('quoteDiscountToggle');
+  const discountValueInput = el('quoteDiscountValueInput');
   const outputTaxInput = el('quoteOutputTaxInput');
   const subtotalDisplay = el('quoteSubtotalDisplay');
+  const discountAmountDisplay = el('quoteDiscountAmountDisplay');
   const taxAmountDisplay = el('quoteTaxAmountDisplay');
   const grandTotalDisplay = el('quoteGrandTotalDisplay');
 
@@ -78,6 +81,8 @@
       incoterms: '',
       notes: '',
       outputTaxPercent: 0,
+      discountType: 'percent',
+      discountValue: 0,
       lineItems: [],
       sentDate: '',
       outcome: '',
@@ -110,7 +115,9 @@
       marginMethod: 'margin',
       marginValue: 0,
       priceOverride: false,
-      overridePrice: 0
+      overridePrice: 0,
+      discountType: 'percent',
+      discountValue: 0
     };
   }
 
@@ -133,9 +140,24 @@
     quotation: loadDraft() || blankQuotation(),
     historyItems: [],
     historyUnsub: null,
-    saving: false
+    saving: false,
+    // Fingerprint of state.quotation as of the last save/load from Firestore — lets
+    // Download/View warn when what's on screen hasn't actually reached the database yet,
+    // instead of silently exporting a PDF that could be lost the moment you move on.
+    lastSavedJson: null
   };
   if (!state.quotation) state.quotation = blankQuotation();
+  state.lastSavedJson = state.quotation.id ? JSON.stringify(state.quotation) : null;
+
+  function isUnsaved() {
+    return state.lastSavedJson === null || state.lastSavedJson !== JSON.stringify(state.quotation);
+  }
+
+  function confirmUnsavedExport(actionLabel) {
+    if (!isUnsaved()) return true;
+    return confirm('This quote hasn\'t been saved yet, or has changes since it was last saved. ' +
+      'If you don\'t save it, those changes could be lost later. ' + actionLabel + ' anyway?');
+  }
 
   // ---------- rendering: header ----------
   function renderHeader() {
@@ -159,6 +181,10 @@
     incotermsInput.value = state.quotation.incoterms || '';
     notesInput.value = state.quotation.notes || '';
     outputTaxInput.value = state.quotation.outputTaxPercent || 0;
+    [...discountToggle.children].forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.discountType === (state.quotation.discountType || 'percent'));
+    });
+    discountValueInput.value = state.quotation.discountValue || 0;
     renderTracking();
   }
 
@@ -179,9 +205,13 @@
   function renderComputedHtml(item) {
     const c = Pricing.computeLineItem(item);
     const currency = state.quotation.baseCurrency;
+    const discountRow = c.discountAmount > 0
+      ? `<div class="li-summary-row"><span>Discount</span><strong>-${currency} ${Core.fmt(c.discountAmount)}</strong></div>`
+      : '';
     if (item.priceOverride) {
       return `
         <div class="li-summary-row"><span>Unit selling price (manual)</span><strong>${currency} ${Core.fmt(c.unitSellingPrice)}</strong></div>
+        ${discountRow}
         <div class="li-summary-row total"><span>Line total (×${Number(item.qty) || 0})</span><strong>${currency} ${Core.fmt(c.lineTotal)}</strong></div>
       `;
     }
@@ -195,6 +225,7 @@
       <div class="li-breakdown">${rows}</div>
       <div class="li-summary-row"><span>Landed cost</span><strong>${currency} ${Core.fmt(c.landedCost)}</strong></div>
       <div class="li-summary-row"><span>Unit selling price</span><strong>${currency} ${Core.fmt(c.unitSellingPrice)}</strong></div>
+      ${discountRow}
       <div class="li-summary-row total"><span>Line total (×${Number(item.qty) || 0})</span><strong>${currency} ${Core.fmt(c.lineTotal)}</strong></div>
     `;
   }
@@ -273,6 +304,15 @@
         </div>
         `}
 
+        <p class="field-label">Discount (optional)</p>
+        <div class="margin-row">
+          <div class="toggle-group" data-discount-toggle>
+            <button type="button" data-discount-type="percent" class="${item.discountType === 'fixed' ? '' : 'active'}">% off</button>
+            <button type="button" data-discount-type="fixed" class="${item.discountType === 'fixed' ? 'active' : ''}">Fixed amount off</button>
+          </div>
+          <input type="number" min="0" step="0.01" data-field="discountValue" value="${item.discountValue || 0}" />
+        </div>
+
         <div class="li-computed" data-computed>${renderComputedHtml(item)}</div>
       </div>`;
   }
@@ -294,6 +334,9 @@
   function updateTotals() {
     const totals = Pricing.computeTotals(state.quotation);
     subtotalDisplay.textContent = `${state.quotation.baseCurrency} ${Core.fmt(totals.subtotal)}`;
+    discountAmountDisplay.textContent = totals.discountAmount > 0
+      ? `-${state.quotation.baseCurrency} ${Core.fmt(totals.discountAmount)}`
+      : `${state.quotation.baseCurrency} 0.00`;
     taxAmountDisplay.textContent = `${state.quotation.baseCurrency} ${Core.fmt(totals.taxAmount)}`;
     grandTotalDisplay.textContent = `${state.quotation.baseCurrency} ${Core.fmt(totals.grandTotal)}`;
     return totals;
@@ -352,6 +395,20 @@
   });
   outputTaxInput.addEventListener('input', () => {
     state.quotation.outputTaxPercent = Number(outputTaxInput.value) || 0;
+    updateTotals();
+    saveDraftLocal();
+  });
+
+  discountToggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-discount-type]');
+    if (!btn) return;
+    state.quotation.discountType = btn.dataset.discountType;
+    renderHeader();
+    updateTotals();
+    saveDraftLocal();
+  });
+  discountValueInput.addEventListener('input', () => {
+    state.quotation.discountValue = Number(discountValueInput.value) || 0;
     updateTotals();
     saveDraftLocal();
   });
@@ -512,6 +569,12 @@
     if (marginBtn) {
       item.marginMethod = marginBtn.dataset.marginMethod;
       renderLineItems(); updateTotals(); saveDraftLocal();
+      return;
+    }
+    const discountBtn = e.target.closest('[data-discount-type]');
+    if (discountBtn) {
+      item.discountType = discountBtn.dataset.discountType;
+      renderLineItems(); updateTotals(); saveDraftLocal();
     }
   });
 
@@ -544,11 +607,14 @@
       incoterms: state.quotation.incoterms || '',
       notes: state.quotation.notes,
       outputTaxPercent: state.quotation.outputTaxPercent,
+      discountType: state.quotation.discountType || 'percent',
+      discountValue: state.quotation.discountValue || 0,
       lineItems: state.quotation.lineItems,
       sentDate: state.quotation.sentDate || '',
       outcome: state.quotation.outcome || '',
       outcomeDate: state.quotation.outcomeDate || '',
       subtotal: totals.subtotal,
+      discountAmount: totals.discountAmount,
       taxAmount: totals.taxAmount,
       grandTotal: totals.grandTotal,
       // createdBy/createdAt are set once at creation (below) and never overwritten on
@@ -578,6 +644,7 @@
     const done = (ok, err) => {
       state.saving = false;
       saveBtn.disabled = false;
+      if (ok) state.lastSavedJson = JSON.stringify(state.quotation);
       setSaveStatus(ok ? 'Saved' : ('Save failed: ' + (err && err.message ? err.message : 'check your connection and permissions')), !ok);
     };
     if (state.quotation.id) {
@@ -596,6 +663,7 @@
   saveBtn.addEventListener('click', saveQuotation);
 
   downloadPdfBtn.addEventListener('click', () => {
+    if (!confirmUnsavedExport('Download')) return;
     const totals = Pricing.computeTotals(state.quotation);
     QuotePdf.generateQuotationPdf(state.quotation, totals, Core.companyForPdf());
   });
@@ -603,6 +671,7 @@
   newQuoteBtn.addEventListener('click', () => {
     if (!confirm('Start a new quotation? Unsaved changes to the current one will be lost.')) return;
     state.quotation = blankQuotation();
+    state.lastSavedJson = null;
     renderAll();
     saveDraftLocal();
     setSaveStatus('');
@@ -623,12 +692,14 @@
       incoterms: doc.incoterms || '',
       notes: doc.notes || '',
       outputTaxPercent: doc.outputTaxPercent || 0,
+      discountType: doc.discountType || 'percent',
+      discountValue: doc.discountValue || 0,
       sentDate: doc.sentDate || '',
       outcome: doc.outcome || '',
       outcomeDate: doc.outcomeDate || '',
       createdByName: doc.createdByName || '',
       lastEditedByName: doc.lastEditedByName || '',
-      lineItems: (doc.lineItems || []).map((li) => Object.assign({}, li, {
+      lineItems: (doc.lineItems || []).map((li) => Object.assign({ discountType: 'percent', discountValue: 0 }, li, {
         id: li.id || Core.uid(),
         components: (li.components || []).map((c) => Object.assign({}, c, { id: c.id || Core.uid() }))
       }))
@@ -692,6 +763,7 @@
   // the same place with the same behavior.
   function openQuote(item) {
     state.quotation = normalizeLoadedQuotation(item);
+    state.lastSavedJson = JSON.stringify(state.quotation);
     renderAll();
     switchView('editor');
     setSaveStatus('');
@@ -721,6 +793,7 @@
       copy.quoteNumber = generateQuoteNumber();
       copy.status = 'draft';
       state.quotation = copy;
+      state.lastSavedJson = null;
       renderAll();
       switchView('editor');
       saveDraftLocal();

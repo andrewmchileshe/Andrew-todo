@@ -143,8 +143,17 @@
     y = sectionBar(y, 'QUOTE DETAILS');
     const rows = (quotation.lineItems || []).map(function (item) {
       const computed = global.Pricing.computeLineItem(item);
+      // Unit Price × Qty won't equal Line Total when a line discount is applied — call
+      // that out inline instead of adding another column that would re-narrow this table.
+      let description = item.description || '';
+      if (computed.discountAmount > 0) {
+        const discountNote = item.discountType === 'fixed'
+          ? (quotation.baseCurrency + ' ' + fmt(item.discountValue) + ' off')
+          : (Number(item.discountValue) || 0) + '% off';
+        description += '\n(Discount: ' + discountNote + ')';
+      }
       return [
-        item.description || '',
+        description,
         item.itemCode || '',
         String(item.qty || 0),
         fmt(computed.unitSellingPrice),
@@ -179,6 +188,11 @@
     line(doc, 'Subtotal', 380, finalY);
     doc.text(quotation.baseCurrency + ' ' + fmt(totals.subtotal), rightEdge, finalY, { align: 'right' });
     finalY += 15;
+    if (totals.discountAmount > 0) {
+      line(doc, 'Discount', 380, finalY);
+      doc.text('-' + quotation.baseCurrency + ' ' + fmt(totals.discountAmount), rightEdge, finalY, { align: 'right' });
+      finalY += 15;
+    }
     if (Number(quotation.outputTaxPercent) > 0) {
       line(doc, 'Tax (' + quotation.outputTaxPercent + '%)', 380, finalY);
       doc.text(quotation.baseCurrency + ' ' + fmt(totals.taxAmount), rightEdge, finalY, { align: 'right' });

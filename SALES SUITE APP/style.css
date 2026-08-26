@@ -348,6 +348,9 @@ textarea { resize: vertical; min-height: 56px; }
 .tax-input-row { display: flex; align-items: center; gap: 10px; }
 .tax-input-row input { max-width: 100px; }
 
+.discount-input-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.discount-input-row input[type="number"] { max-width: 100px; }
+
 .action-row { display: flex; flex-wrap: wrap; gap: 10px; }
 
 .pill-btn {

@@ -103,8 +103,23 @@
     historyItems: [],
     historyUnsub: null,
     saving: false,
-    assigning: false
+    assigning: false,
+    // Fingerprint of state.oa as of the last save/load from Firestore — lets Download/View
+    // warn when what's on screen hasn't actually reached the database yet, instead of
+    // silently exporting a PDF that could be lost the moment you move on.
+    lastSavedJson: null
   };
+  if (state.oa && state.oa.id) state.lastSavedJson = JSON.stringify(state.oa);
+
+  function isUnsaved() {
+    return state.lastSavedJson === null || state.lastSavedJson !== JSON.stringify(state.oa);
+  }
+
+  function confirmUnsavedExport(actionLabel) {
+    if (!isUnsaved()) return true;
+    return confirm('This acknowledgement hasn\'t been saved yet, or has changes since it was last saved. ' +
+      'If you don\'t save it, those changes could be lost later. ' + actionLabel + ' anyway?');
+  }
 
   function defaultPrefix() {
     return DEFAULT_PREFIX[Core.state.activeCompanyId] || 'OA';
@@ -130,6 +145,7 @@
     assignOaNumber()
       .then((number) => {
         state.oa = blankOa(number);
+        state.lastSavedJson = null;
         saveDraftLocal();
         renderAll();
         setSaveStatus('');
@@ -170,6 +186,7 @@
           };
         });
         state.oa = oa;
+        state.lastSavedJson = null;
         saveDraftLocal();
         renderAll();
         switchView('editor');
@@ -470,6 +487,7 @@
     const done = (ok, err) => {
       state.saving = false;
       saveBtn.disabled = false;
+      if (ok) state.lastSavedJson = JSON.stringify(state.oa);
       setSaveStatus(ok ? 'Saved' : ('Save failed: ' + (err && err.message ? err.message : 'check your connection and permissions')), !ok);
     };
     if (state.oa.id) {
@@ -487,6 +505,7 @@
   saveBtn.addEventListener('click', saveOa);
 
   downloadPdfBtn.addEventListener('click', () => {
+    if (!confirmUnsavedExport('Download')) return;
     const totals = Pricing.computeOaTotals(state.oa);
     OaPdf.generateOaPdf(state.oa, totals, Core.companyForPdf());
   });
@@ -555,6 +574,7 @@
       OaPdf.generateOaPdf(loaded, Pricing.computeOaTotals(loaded), Core.companyForPdf());
     } else if (e.target.closest('[data-open-history]')) {
       state.oa = normalizeLoaded(item);
+      state.lastSavedJson = JSON.stringify(state.oa);
       saveDraftLocal();
       renderAll();
       switchView('editor');

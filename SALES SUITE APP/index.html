@@ -178,6 +178,15 @@
           <div class="card">
             <h2>Totals</h2>
             <div class="totals-row"><span>Subtotal</span><span id="quoteSubtotalDisplay">—</span></div>
+            <div class="totals-row discount-input-row">
+              <span>Discount</span>
+              <div class="toggle-group" id="quoteDiscountToggle">
+                <button type="button" data-discount-type="percent" class="active">% off</button>
+                <button type="button" data-discount-type="fixed">Fixed amount off</button>
+              </div>
+              <input type="number" id="quoteDiscountValueInput" min="0" step="0.01" value="0">
+            </div>
+            <div class="totals-row"><span>Discount amount</span><span id="quoteDiscountAmountDisplay">—</span></div>
             <div class="totals-row tax-input-row">
               <span>Output tax (%)</span>
               <input type="number" id="quoteOutputTaxInput" min="0" step="0.01" value="0">
