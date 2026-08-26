@@ -78,6 +78,7 @@
         </div>
         <div class="history-total">${Core.escapeHtml(item.sellingCurrency)} ${Core.fmt(item.sellingPrice)}</div>
         <div class="history-actions">
+          <button type="button" class="text-btn" data-view-item>View</button>
           <button type="button" class="text-btn" data-edit-item>Edit</button>
           <button type="button" class="text-btn danger" data-delete-item>Delete</button>
         </div>
@@ -89,7 +90,9 @@
     if (!row) return;
     const item = state.items.find((i) => i.id === row.dataset.itemId);
     if (!item) return;
-    if (e.target.closest('[data-edit-item]')) {
+    if (e.target.closest('[data-view-item]')) {
+      openItemModal(item, { readOnly: true });
+    } else if (e.target.closest('[data-edit-item]')) {
       openItemModal(item);
     } else if (e.target.closest('[data-delete-item]')) {
       if (!confirm(`Delete catalog item "${item.description}"? This cannot be undone.`)) return;
@@ -105,12 +108,15 @@
     return { itemCode: '', description: '', unit: 'Each', costPrice: 0, costCurrency: 'ZMW', marginMethod: 'margin', marginValue: 0, sellingPrice: 0, sellingCurrency: 'ZMW' };
   }
 
-  function openItemModal(item) {
+  const EDITABLE_FIELDS = [itemCodeInput, descriptionInput, unitInput, costPriceInput, costCurrencyInput, marginValueInput, sellingPriceInput, sellingCurrencyInput];
+
+  function openItemModal(item, opts) {
+    opts = opts || {};
     const data = item ? Object.assign(blankItemForm(), item) : blankItemForm();
     state.editingId = item ? item.id : null;
     state.editingMarginMethod = data.marginMethod === 'markup' ? 'markup' : 'margin';
 
-    itemModalTitle.textContent = item ? 'Edit catalog item' : 'Add catalog item';
+    itemModalTitle.textContent = opts.readOnly ? 'View catalog item' : (item ? 'Edit catalog item' : 'Add catalog item');
     itemCodeInput.value = data.itemCode;
     descriptionInput.value = data.description;
     unitInput.value = data.unit;
@@ -121,7 +127,11 @@
     sellingCurrencyInput.value = data.sellingCurrency;
     renderMarginToggle();
     updateSuggestedPrice();
-    itemDeleteBtn.style.display = item ? '' : 'none';
+    EDITABLE_FIELDS.forEach((el) => { el.disabled = !!opts.readOnly; });
+    [...marginToggle.children].forEach((btn) => { btn.disabled = !!opts.readOnly; });
+    useSuggestedBtn.style.display = opts.readOnly ? 'none' : '';
+    itemSaveBtn.style.display = opts.readOnly ? 'none' : '';
+    itemDeleteBtn.style.display = (item && !opts.readOnly) ? '' : 'none';
     itemStatusText.textContent = '';
     itemModal.classList.add('open');
   }

@@ -73,6 +73,7 @@
           <div class="history-sub">${Core.escapeHtml(r.sub)}</div>
         </div>
         <div class="history-actions">
+          <button type="button" class="text-btn" data-view-item>View</button>
           <button type="button" class="text-btn" data-edit-item>Edit</button>
           <button type="button" class="text-btn danger" data-delete-item>Delete</button>
         </div>
@@ -85,7 +86,9 @@
     if (!row) return;
     const item = state.items.find((c) => c.id === row.dataset.itemId);
     if (!item) return;
-    if (e.target.closest('[data-edit-item]')) {
+    if (e.target.closest('[data-view-item]')) {
+      openItemModal(item, { readOnly: true });
+    } else if (e.target.closest('[data-edit-item]')) {
       openItemModal(item);
     } else if (e.target.closest('[data-delete-item]')) {
       if (!confirm(`Delete customer "${item.company || item.name}"? This cannot be undone.`)) return;
@@ -101,16 +104,21 @@
     return { name: '', company: '', email: '', phone: '', address: '' };
   }
 
-  function openItemModal(item) {
+  const EDITABLE_FIELDS = [nameInput, companyInput, emailInput, phoneInput, addressInput];
+
+  function openItemModal(item, opts) {
+    opts = opts || {};
     const data = item ? Object.assign(blankForm(), item) : blankForm();
     state.editingId = item ? item.id : null;
-    itemModalTitle.textContent = item ? 'Edit customer' : 'Add customer';
+    itemModalTitle.textContent = opts.readOnly ? 'View customer' : (item ? 'Edit customer' : 'Add customer');
     nameInput.value = data.name;
     companyInput.value = data.company;
     emailInput.value = data.email;
     phoneInput.value = data.phone;
     addressInput.value = data.address;
-    itemDeleteBtn.style.display = item ? '' : 'none';
+    EDITABLE_FIELDS.forEach((el) => { el.disabled = !!opts.readOnly; });
+    itemSaveBtn.style.display = opts.readOnly ? 'none' : '';
+    itemDeleteBtn.style.display = (item && !opts.readOnly) ? '' : 'none';
     itemStatusText.textContent = '';
     itemModal.classList.add('open');
   }

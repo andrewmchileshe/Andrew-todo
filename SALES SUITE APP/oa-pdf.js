@@ -50,7 +50,9 @@
     return y + boxHeight;
   }
 
-  function generateOaPdf(oa, totals, company) {
+  // Builds the jsPDF document without deciding what happens to it — generateOaPdf and
+  // viewOaPdf share this and only differ in how they hand off the finished doc.
+  function buildOaDoc(oa, totals, company) {
     const jsPDF = global.jspdf.jsPDF;
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const NAVY = hexToRgb(company.brandColor) || DEFAULT_NAVY;
@@ -214,8 +216,19 @@
     doc.text(footerLine, pageWidth / 2, pageHeight - 8, { align: 'center' });
     doc.setTextColor(0, 0, 0);
 
+    return doc;
+  }
+
+  function generateOaPdf(oa, totals, company) {
+    const doc = buildOaDoc(oa, totals, company);
     doc.save('Acknowledgement-' + (oa.oaNumber || 'draft') + '.pdf');
   }
 
-  global.OaPdf = { generateOaPdf: generateOaPdf };
+  // Opens the PDF in a new browser tab for a quick look, without forcing a download.
+  function viewOaPdf(oa, totals, company) {
+    const doc = buildOaDoc(oa, totals, company);
+    window.open(doc.output('bloburl'), '_blank');
+  }
+
+  global.OaPdf = { generateOaPdf: generateOaPdf, viewOaPdf: viewOaPdf };
 })(window);

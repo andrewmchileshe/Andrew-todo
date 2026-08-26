@@ -45,7 +45,9 @@
     return y + boxHeight;
   }
 
-  function generateQuotationPdf(quotation, totals, company) {
+  // Builds the jsPDF document without deciding what happens to it — generateQuotationPdf
+  // and viewQuotationPdf share this and only differ in how they hand off the finished doc.
+  function buildQuotationDoc(quotation, totals, company) {
     const jsPDF = global.jspdf.jsPDF;
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const NAVY = hexToRgb(company.brandColor) || DEFAULT_NAVY;
@@ -223,8 +225,19 @@
     doc.text(footerLine, pageWidth / 2, pageHeight - 8, { align: 'center' });
     doc.setTextColor(0, 0, 0);
 
+    return doc;
+  }
+
+  function generateQuotationPdf(quotation, totals, company) {
+    const doc = buildQuotationDoc(quotation, totals, company);
     doc.save('Quotation-' + quotation.quoteNumber + '.pdf');
   }
 
-  global.QuotePdf = { generateQuotationPdf: generateQuotationPdf };
+  // Opens the PDF in a new browser tab for a quick look, without forcing a download.
+  function viewQuotationPdf(quotation, totals, company) {
+    const doc = buildQuotationDoc(quotation, totals, company);
+    window.open(doc.output('bloburl'), '_blank');
+  }
+
+  global.QuotePdf = { generateQuotationPdf: generateQuotationPdf, viewQuotationPdf: viewQuotationPdf };
 })(window);

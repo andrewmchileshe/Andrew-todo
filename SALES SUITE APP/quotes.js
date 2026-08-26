@@ -663,6 +663,8 @@
         </div>
         <div class="history-total">${item.baseCurrency} ${Core.fmt(item.grandTotal)}</div>
         <div class="history-actions">
+          <button type="button" class="text-btn" data-view-history>View</button>
+          <button type="button" class="text-btn" data-download-history>Download</button>
           <button type="button" class="text-btn" data-open-history>Edit</button>
           <button type="button" class="text-btn" data-convert-history>Convert to OA</button>
           <button type="button" class="text-btn" data-duplicate-history>Duplicate quote</button>
@@ -702,7 +704,13 @@
     const item = state.historyItems.find((i) => i.id === id);
     if (!item) return;
 
-    if (e.target.closest('[data-open-history]')) {
+    if (e.target.closest('[data-view-history]')) {
+      const loaded = normalizeLoadedQuotation(item);
+      QuotePdf.viewQuotationPdf(loaded, Pricing.computeTotals(loaded), Core.companyForPdf());
+    } else if (e.target.closest('[data-download-history]')) {
+      const loaded = normalizeLoadedQuotation(item);
+      QuotePdf.generateQuotationPdf(loaded, Pricing.computeTotals(loaded), Core.companyForPdf());
+    } else if (e.target.closest('[data-open-history]')) {
       openQuote(item);
     } else if (e.target.closest('[data-convert-history]')) {
       global.OAModule.startFromQuote(normalizeLoadedQuotation(item));

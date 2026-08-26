@@ -532,6 +532,8 @@
         </div>
         <div class="history-total">${item.currency} ${Core.fmt(item.total)}</div>
         <div class="history-actions">
+          <button type="button" class="text-btn" data-view-history>View</button>
+          <button type="button" class="text-btn" data-download-history>Download</button>
           <button type="button" class="text-btn" data-open-history>Edit</button>
           <button type="button" class="text-btn danger" data-delete-history>Delete</button>
         </div>
@@ -545,7 +547,13 @@
     const item = state.historyItems.find((i) => i.id === id);
     if (!item) return;
 
-    if (e.target.closest('[data-open-history]')) {
+    if (e.target.closest('[data-view-history]')) {
+      const loaded = normalizeLoaded(item);
+      OaPdf.viewOaPdf(loaded, Pricing.computeOaTotals(loaded), Core.companyForPdf());
+    } else if (e.target.closest('[data-download-history]')) {
+      const loaded = normalizeLoaded(item);
+      OaPdf.generateOaPdf(loaded, Pricing.computeOaTotals(loaded), Core.companyForPdf());
+    } else if (e.target.closest('[data-open-history]')) {
       state.oa = normalizeLoaded(item);
       saveDraftLocal();
       renderAll();
