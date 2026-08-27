@@ -344,6 +344,8 @@
         <div class="card">
           <div class="action-row">
             <input type="text" id="catalogSearchInput" placeholder="Search by item code or description" style="flex:1;">
+            <button type="button" class="pill-btn secondary" id="catalogExportPdfBtn" style="flex:none;">Download PDF</button>
+            <button type="button" class="pill-btn secondary" id="catalogExportExcelBtn" style="flex:none;">Download Excel</button>
             <button type="button" class="pill-btn secondary" id="catalogBulkUploadBtn" style="flex:none;">Bulk upload</button>
             <button type="button" class="pill-btn" id="catalogAddBtn" style="flex:none;">+ Add item</button>
           </div>
@@ -537,9 +539,11 @@
   <script src="firebase-config.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="pricing.js"></script>
   <script src="quote-pdf.js"></script>
   <script src="oa-pdf.js"></script>
+  <script src="catalog-pdf.js"></script>
   <script src="core.js"></script>
   <script src="catalog.js"></script>
   <script src="customers.js"></script>

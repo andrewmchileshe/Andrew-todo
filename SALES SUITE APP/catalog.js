@@ -12,6 +12,8 @@
   const catalogEmptyState = el('catalogEmptyState');
   const catalogAddBtn = el('catalogAddBtn');
   const catalogBulkUploadBtn = el('catalogBulkUploadBtn');
+  const catalogExportPdfBtn = el('catalogExportPdfBtn');
+  const catalogExportExcelBtn = el('catalogExportExcelBtn');
 
   const itemModal = el('catalogItemModal');
   const itemModalClose = el('catalogItemModalClose');
@@ -102,6 +104,32 @@
 
   catalogSearchInput.addEventListener('input', renderList);
   catalogAddBtn.addEventListener('click', () => openItemModal(null));
+
+  // ---------- pricelist export (PDF / Excel) ----------
+  // Exports whatever the search box is currently showing — the full catalog if it's
+  // empty, or just the matching subset if the user has filtered it down.
+  catalogExportPdfBtn.addEventListener('click', () => {
+    const items = filterItems(state.items, catalogSearchInput.value);
+    if (!items.length) { alert('No catalog items to export.'); return; }
+    CatalogPdf.generateCatalogPdf(items, Core.companyForPdf());
+  });
+
+  catalogExportExcelBtn.addEventListener('click', () => {
+    const items = filterItems(state.items, catalogSearchInput.value);
+    if (!items.length) { alert('No catalog items to export.'); return; }
+    const rows = items.map((item) => ({
+      'Item Code': item.itemCode || '',
+      'Description': item.description || '',
+      'Unit': item.unit || '',
+      'Currency': item.sellingCurrency || '',
+      'Selling Price': Number(item.sellingPrice) || 0
+    }));
+    const sheet = XLSX.utils.json_to_sheet(rows);
+    sheet['!cols'] = [{ wch: 16 }, { wch: 44 }, { wch: 10 }, { wch: 10 }, { wch: 14 }];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, 'Price List');
+    XLSX.writeFile(workbook, 'Pricelist-' + new Date().toISOString().slice(0, 10) + '.xlsx');
+  });
 
   // ---------- add/edit modal ----------
   function blankItemForm() {
