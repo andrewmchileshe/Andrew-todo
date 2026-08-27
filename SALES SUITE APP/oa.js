@@ -109,6 +109,13 @@
     // silently exporting a PDF that could be lost the moment you move on.
     lastSavedJson: null
   };
+  // An in-progress (never-saved) draft persists in localStorage across logins and days —
+  // without this, reopening the editor after a break shows whatever date was on screen
+  // when the draft was last touched. An already-saved acknowledgement keeps its real date.
+  if (state.oa && !state.oa.id && state.oa.dateIssued !== Core.todayIso()) {
+    state.oa.dateIssued = Core.todayIso();
+    saveDraftLocal();
+  }
   if (state.oa && state.oa.id) state.lastSavedJson = JSON.stringify(state.oa);
 
   function isUnsaved() {

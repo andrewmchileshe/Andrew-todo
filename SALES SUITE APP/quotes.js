@@ -147,6 +147,16 @@
     lastSavedJson: null
   };
   if (!state.quotation) state.quotation = blankQuotation();
+
+  // An in-progress (never-saved) draft persists in localStorage across logins and days —
+  // without this, reopening the editor after a break shows whatever date was on screen
+  // when the draft was last touched, until the user notices and starts a new quotation.
+  // A quote that's already been saved keeps whatever date it was actually issued on.
+  if (!state.quotation.id && state.quotation.quoteDate !== Core.todayIso()) {
+    state.quotation.quoteDate = Core.todayIso();
+    saveDraftLocal();
+  }
+
   state.lastSavedJson = state.quotation.id ? JSON.stringify(state.quotation) : null;
 
   function isUnsaved() {
