@@ -1,0 +1,16 @@
+{
+  "name": "labmall-whatsapp-functions",
+  "description": "WhatsApp Cloud API webhook for Labmall Scientific",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "scripts": {
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^5.1.1"
+  }
+}
