@@ -197,8 +197,9 @@
     sellingPriceInput.value = suggestedPriceText.dataset.suggested || 0;
   });
 
+  // Closing only via the X (not a click on the overlay) so an accidental click outside
+  // this form doesn't silently discard whatever was just typed.
   itemModalClose.addEventListener('click', () => itemModal.classList.remove('open'));
-  itemModal.addEventListener('click', (e) => { if (e.target === itemModal) itemModal.classList.remove('open'); });
 
   itemSaveBtn.addEventListener('click', () => {
     if (state.saving) return;
@@ -313,7 +314,6 @@
     bulkModal.classList.add('open');
   });
   bulkModalClose.addEventListener('click', () => bulkModal.classList.remove('open'));
-  bulkModal.addEventListener('click', (e) => { if (e.target === bulkModal) bulkModal.classList.remove('open'); });
 
   bulkDownloadTemplateBtn.addEventListener('click', () => {
     const sample = BULK_COLUMNS.join(',') + '\n' +

@@ -123,8 +123,9 @@
     itemModal.classList.add('open');
   }
 
+  // Closing only via the X (not a click on the overlay) so an accidental click outside
+  // this form doesn't silently discard whatever was just typed.
   itemModalClose.addEventListener('click', () => itemModal.classList.remove('open'));
-  itemModal.addEventListener('click', (e) => { if (e.target === itemModal) itemModal.classList.remove('open'); });
 
   function currentForm() {
     return {

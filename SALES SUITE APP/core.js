@@ -388,7 +388,6 @@
     settingsModal.classList.add('open');
   });
   settingsModalClose.addEventListener('click', () => settingsModal.classList.remove('open'));
-  settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) settingsModal.classList.remove('open'); });
 
   companyLogoInput.addEventListener('change', () => {
     const file = companyLogoInput.files && companyLogoInput.files[0];

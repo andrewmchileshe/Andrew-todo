@@ -148,16 +148,22 @@
   };
   if (!state.quotation) state.quotation = blankQuotation();
 
-  // An in-progress (never-saved) draft persists in localStorage across logins and days —
-  // without this, reopening the editor after a break shows whatever date was on screen
-  // when the draft was last touched, until the user notices and starts a new quotation.
-  // A quote that's already been saved keeps whatever date it was actually issued on.
-  if (!state.quotation.id && state.quotation.quoteDate !== Core.todayIso()) {
-    state.quotation.quoteDate = Core.todayIso();
-    saveDraftLocal();
+  // A quote still being prepared — saved as a draft or not — can sit untouched across
+  // logins and days. Until it's actually been sent, "today" is the only date that makes
+  // sense to show; once sentDate is set, that's the real issue date and stops moving.
+  function refreshDateIfUnsent(q) {
+    if (!q.sentDate && q.quoteDate !== Core.todayIso()) {
+      q.quoteDate = Core.todayIso();
+    }
   }
 
+  // Fingerprint captured BEFORE the date refresh below, so if it actually changes the
+  // date, that counts as an unsaved edit — Download/View will correctly prompt a save
+  // rather than silently exporting a date that was never written back to Firestore.
   state.lastSavedJson = state.quotation.id ? JSON.stringify(state.quotation) : null;
+
+  refreshDateIfUnsent(state.quotation);
+  saveDraftLocal();
 
   function isUnsaved() {
     return state.lastSavedJson === null || state.lastSavedJson !== JSON.stringify(state.quotation);
@@ -773,7 +779,9 @@
   // the same place with the same behavior.
   function openQuote(item) {
     state.quotation = normalizeLoadedQuotation(item);
+    // Fingerprint BEFORE the date refresh — see the matching comment at boot above.
     state.lastSavedJson = JSON.stringify(state.quotation);
+    refreshDateIfUnsent(state.quotation);
     renderAll();
     switchView('editor');
     setSaveStatus('');
