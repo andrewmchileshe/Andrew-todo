@@ -154,6 +154,11 @@
     sellingPriceInput.value = data.sellingPrice;
     sellingCurrencyInput.value = data.sellingCurrency;
     renderMarginToggle();
+    // A brand-new item, or one whose price was never explicitly set, has the selling
+    // price track the live cost+margin suggestion — otherwise it's easy to fill in cost
+    // and margin, see a sensible-looking suggestion, and save with the real field still
+    // at 0. An item that already has a real saved price is left alone.
+    state.sellingPriceFollowsSuggestion = !data.sellingPrice;
     updateSuggestedPrice();
     EDITABLE_FIELDS.forEach((el) => { el.disabled = !!opts.readOnly; });
     [...marginToggle.children].forEach((btn) => { btn.disabled = !!opts.readOnly; });
@@ -180,10 +185,17 @@
     });
     suggestedPriceText.textContent = `Suggested from cost + margin: ${costCurrencyInput.value || ''} ${Core.fmt(computed.unitSellingPrice)}`;
     suggestedPriceText.dataset.suggested = computed.unitSellingPrice;
+    if (state.sellingPriceFollowsSuggestion) {
+      sellingPriceInput.value = computed.unitSellingPrice;
+    }
   }
 
   [costPriceInput, marginValueInput, costCurrencyInput].forEach((inp) =>
     inp.addEventListener('input', updateSuggestedPrice));
+
+  // The moment someone types their own selling price, stop overwriting it with the
+  // suggestion — this is what lets a deliberately different (negotiated) price stick.
+  sellingPriceInput.addEventListener('input', () => { state.sellingPriceFollowsSuggestion = false; });
 
   marginToggle.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-margin-method]');
