@@ -853,6 +853,15 @@
       });
   });
 
+  // A save reaching Firestore's servers is the only thing offline persistence can't make
+  // instant — closing the tab mid-save is now queued and retried, but warning here means
+  // you never have to wonder whether that happened before you walked away.
+  global.addEventListener('beforeunload', (e) => {
+    if (!state.saving) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
+
   // ---------- boot ----------
   renderAll();
   renderHistory();

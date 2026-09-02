@@ -156,6 +156,13 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     state.auth = firebase.auth();
     state.db = firebase.firestore();
+    // Queues writes locally (IndexedDB) so a dropped connection, a closed tab, or a
+    // sleeping laptop between clicking Save and the server acknowledging it can no longer
+    // lose the write silently — the SDK retries automatically once back online, even in a
+    // later session. synchronizeTabs lets it work across multiple open tabs instead of
+    // only the first one. If the browser doesn't support it, the app just falls back to
+    // its previous behavior rather than failing to load.
+    state.db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
     state.auth.onAuthStateChanged(handleAuthChange);
   }
 
