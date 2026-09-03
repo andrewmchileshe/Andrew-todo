@@ -112,6 +112,9 @@
     e.returnValue = '';
   });
 
+  const historyChangeCallbacks = [];
+  function onHistoryChange(cb) { historyChangeCallbacks.push(cb); }
+
   function defaultPrefix() {
     return DEFAULT_PREFIX[Core.state.activeCompanyId] || 'PO';
   }
@@ -540,11 +543,12 @@
       .onSnapshot((snap) => {
         state.historyItems = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
         renderHistory();
+        historyChangeCallbacks.forEach((cb) => cb(state.historyItems));
       }, (err) => setSaveStatus('History sync error: ' + err.message, true));
   });
 
   switchView('editor');
   renderHistory();
 
-  global.PurchaseOrdersModule = { startFromOa, state };
+  global.PurchaseOrdersModule = { startFromOa, onHistoryChange, state };
 })(window);

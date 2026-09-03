@@ -434,6 +434,7 @@
                     <option value="ZMW"><option value="USD"><option value="ZAR"><option value="GBP"><option value="EUR">
                   </datalist>
                 </label>
+                <label>Exchange rate to ZMW<input type="number" min="0" step="0.0001" id="cpoExchangeRateInput"></label>
               </div>
 
               <div class="doc-meta-row">
@@ -465,6 +466,7 @@
             <div class="card">
               <h2>Totals</h2>
               <div class="totals-row"><span>Subtotal</span><span id="cpoSubtotalDisplay">—</span></div>
+              <div class="totals-row"><span>Value in Kwacha</span><span id="cpoKwachaValueDisplay">—</span></div>
             </div>
 
             <div class="card">
@@ -605,6 +607,22 @@
           <h2>Awaiting a decision</h2>
           <div id="reportFollowUpList"></div>
           <p class="empty-state" id="reportFollowUpEmptyState">Nothing awaiting a decision.</p>
+        </div>
+        <div class="card">
+          <div class="doc-meta-row">
+            <h2 style="margin:0;">Customer PO value by status</h2>
+            <button type="button" class="text-btn" id="reportCpoPdfBtn">Download PDF</button>
+          </div>
+          <p class="history-sub">Valued in Kwacha using each order's own exchange rate.</p>
+          <div id="reportCpoValueList"></div>
+        </div>
+        <div class="card">
+          <div class="doc-meta-row">
+            <h2 style="margin:0;">Supplier PO cost value by status</h2>
+            <button type="button" class="text-btn" id="reportPoPdfBtn">Download PDF</button>
+          </div>
+          <p class="history-sub">Valued in Kwacha using each order's own exchange rate.</p>
+          <div id="reportPoValueList"></div>
         </div>
       </div>
 
@@ -849,6 +867,7 @@
   <script src="oa-pdf.js"></script>
   <script src="catalog-pdf.js"></script>
   <script src="po-pdf.js"></script>
+  <script src="report-pdf.js"></script>
   <script src="core.js"></script>
   <script src="catalog.js"></script>
   <script src="customers.js"></script>

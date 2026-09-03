@@ -25,6 +25,7 @@
   const poDateInput = el('cpoPoDateInput');
   const receivedDateInput = el('cpoReceivedDateInput');
   const currencyInput = el('cpoCurrencyInput');
+  const exchangeRateInput = el('cpoExchangeRateInput');
 
   const pickCustomerBtn = el('cpoPickCustomerBtn');
   const clientNameInput = el('cpoClientNameInput');
@@ -39,6 +40,7 @@
   const addLineItemBtn = el('cpoAddLineItemBtn');
 
   const subtotalDisplay = el('cpoSubtotalDisplay');
+  const kwachaValueDisplay = el('cpoKwachaValueDisplay');
   const notesInput = el('cpoNotesInput');
 
   const saveBtn = el('cpoSaveBtn');
@@ -74,6 +76,7 @@
       poDate: Core.todayIso(),
       receivedDate: Core.todayIso(),
       currency: 'ZMW',
+      exchangeRateToKwacha: 1,
       client: { name: '', company: '', email: '', phone: '' },
       linkedQuoteNumber: '',
       linkedOaNumber: '',
@@ -108,6 +111,9 @@
     e.preventDefault();
     e.returnValue = '';
   });
+
+  const historyChangeCallbacks = [];
+  function onHistoryChange(cb) { historyChangeCallbacks.push(cb); }
 
   function defaultPrefix() {
     return DEFAULT_PREFIX[Core.state.activeCompanyId] || 'CPO';
@@ -158,6 +164,7 @@
     poDateInput.value = cpo.poDate || '';
     receivedDateInput.value = cpo.receivedDate || '';
     currencyInput.value = cpo.currency || 'ZMW';
+    exchangeRateInput.value = cpo.exchangeRateToKwacha != null ? cpo.exchangeRateToKwacha : 1;
 
     clientNameInput.value = cpo.client.name || '';
     clientCompanyInput.value = cpo.client.company || '';
@@ -206,6 +213,7 @@
   function updateTotals() {
     const totals = Pricing.computePoTotals(state.cpo);
     subtotalDisplay.textContent = `${state.cpo.currency} ${Core.fmt(totals.subtotal)}`;
+    kwachaValueDisplay.textContent = `ZMW ${Core.fmt(totals.kwachaValue)}`;
     return totals;
   }
 
@@ -231,6 +239,11 @@
   currencyInput.addEventListener('input', () => {
     state.cpo.currency = currencyInput.value.toUpperCase();
     renderLineItems();
+    updateTotals();
+    saveDraftLocal();
+  });
+  exchangeRateInput.addEventListener('input', () => {
+    state.cpo.exchangeRateToKwacha = Number(exchangeRateInput.value) || 1;
     updateTotals();
     saveDraftLocal();
   });
@@ -325,12 +338,14 @@
       poDate: cpo.poDate,
       receivedDate: cpo.receivedDate,
       currency: cpo.currency,
+      exchangeRateToKwacha: cpo.exchangeRateToKwacha,
       client: cpo.client,
       linkedQuoteNumber: cpo.linkedQuoteNumber || '',
       linkedOaNumber: cpo.linkedOaNumber || '',
       lineItems: cpo.lineItems,
       notes: cpo.notes,
       subtotal: totals.subtotal,
+      kwachaValue: totals.kwachaValue,
       lastEditedBy: Core.state.user.uid,
       lastEditedByName: Core.state.profile.displayName || Core.state.user.email,
       lastEditedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -467,11 +482,12 @@
       .onSnapshot((snap) => {
         state.historyItems = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
         renderHistory();
+        historyChangeCallbacks.forEach((cb) => cb(state.historyItems));
       }, (err) => setSaveStatus('History sync error: ' + err.message, true));
   });
 
   switchView('editor');
   renderHistory();
 
-  global.CustomerPurchaseOrdersModule = { state };
+  global.CustomerPurchaseOrdersModule = { onHistoryChange, state };
 })(window);
