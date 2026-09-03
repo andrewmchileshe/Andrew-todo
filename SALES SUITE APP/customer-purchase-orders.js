@@ -41,6 +41,9 @@
   const addLineItemBtn = el('cpoAddLineItemBtn');
 
   const subtotalDisplay = el('cpoSubtotalDisplay');
+  const vatInput = el('cpoVatInput');
+  const vatAmountDisplay = el('cpoVatAmountDisplay');
+  const totalDisplay = el('cpoTotalDisplay');
   const kwachaValueDisplay = el('cpoKwachaValueDisplay');
   const notesInput = el('cpoNotesInput');
 
@@ -79,6 +82,7 @@
       receivedDate: Core.todayIso(),
       currency: 'ZMW',
       exchangeRateToKwacha: 1,
+      vatPercent: 0,
       client: { name: '', company: '', email: '', phone: '' },
       linkedQuoteNumber: '',
       linkedOaNumber: '',
@@ -167,6 +171,7 @@
     receivedDateInput.value = cpo.receivedDate || '';
     currencyInput.value = cpo.currency || 'ZMW';
     exchangeRateInput.value = cpo.exchangeRateToKwacha != null ? cpo.exchangeRateToKwacha : 1;
+    vatInput.value = cpo.vatPercent || 0;
 
     clientNameInput.value = cpo.client.name || '';
     clientCompanyInput.value = cpo.client.company || '';
@@ -213,8 +218,10 @@
   }
 
   function updateTotals() {
-    const totals = Pricing.computePoTotals(state.cpo);
+    const totals = Pricing.computeCpoTotals(state.cpo);
     subtotalDisplay.textContent = `${state.cpo.currency} ${Core.fmt(totals.subtotal)}`;
+    vatAmountDisplay.textContent = `${state.cpo.currency} ${Core.fmt(totals.vatAmount)}`;
+    totalDisplay.textContent = `${state.cpo.currency} ${Core.fmt(totals.total)}`;
     kwachaValueDisplay.textContent = `ZMW ${Core.fmt(totals.kwachaValue)}`;
     return totals;
   }
@@ -246,6 +253,11 @@
   });
   exchangeRateInput.addEventListener('input', () => {
     state.cpo.exchangeRateToKwacha = Number(exchangeRateInput.value) || 1;
+    updateTotals();
+    saveDraftLocal();
+  });
+  vatInput.addEventListener('input', () => {
+    state.cpo.vatPercent = Number(vatInput.value) || 0;
     updateTotals();
     saveDraftLocal();
   });
@@ -281,6 +293,7 @@
       if (oa.sourceQuoteNumber) state.cpo.linkedQuoteNumber = oa.sourceQuoteNumber;
       if (oa.customerPoRef) state.cpo.customerPoNumber = oa.customerPoRef;
       state.cpo.currency = oa.currency || 'ZMW';
+      state.cpo.vatPercent = Number(oa.vatPercent) || 0;
       state.cpo.lineItems = (oa.lineItems || []).map((li) => ({
         id: Core.uid(),
         description: li.description || '',
@@ -359,7 +372,7 @@
   }
 
   function buildFirestoreDoc() {
-    const totals = Pricing.computePoTotals(state.cpo);
+    const totals = Pricing.computeCpoTotals(state.cpo);
     const cpo = state.cpo;
     return {
       cpoNumber: cpo.cpoNumber,
@@ -369,12 +382,15 @@
       receivedDate: cpo.receivedDate,
       currency: cpo.currency,
       exchangeRateToKwacha: cpo.exchangeRateToKwacha,
+      vatPercent: cpo.vatPercent,
       client: cpo.client,
       linkedQuoteNumber: cpo.linkedQuoteNumber || '',
       linkedOaNumber: cpo.linkedOaNumber || '',
       lineItems: cpo.lineItems,
       notes: cpo.notes,
       subtotal: totals.subtotal,
+      vatAmount: totals.vatAmount,
+      total: totals.total,
       kwachaValue: totals.kwachaValue,
       lastEditedBy: Core.state.user.uid,
       lastEditedByName: Core.state.profile.displayName || Core.state.user.email,

@@ -138,6 +138,26 @@
     };
   }
 
+  // Customer POs get their own totals (unlike Supplier POs) because they carry VAT —
+  // it's what the customer actually owes, so the Kwacha value used for reporting is
+  // the VAT-inclusive total, not the bare subtotal.
+  function computeCpoTotals(cpo) {
+    const subtotal = (cpo.lineItems || []).reduce(function (sum, item) {
+      return sum + computePoLineTotal(item);
+    }, 0);
+    const vatPercent = Number(cpo.vatPercent) || 0;
+    const vatAmount = subtotal * (vatPercent / 100);
+    const total = subtotal + vatAmount;
+    const exchangeRateToKwacha = Number(cpo.exchangeRateToKwacha) || 1;
+    const kwachaValue = total * exchangeRateToKwacha;
+    return {
+      subtotal: round2(subtotal),
+      vatAmount: round2(vatAmount),
+      total: round2(total),
+      kwachaValue: round2(kwachaValue)
+    };
+  }
+
   global.Pricing = {
     computeLineItem: computeLineItem,
     computeTotals: computeTotals,
@@ -145,6 +165,7 @@
     computeOaTotals: computeOaTotals,
     computePoLineTotal: computePoLineTotal,
     computePoTotals: computePoTotals,
+    computeCpoTotals: computeCpoTotals,
     round2: round2
   };
 })(window);
