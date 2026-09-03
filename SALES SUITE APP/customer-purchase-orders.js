@@ -35,6 +35,7 @@
 
   const linkedQuoteNumberInput = el('cpoLinkedQuoteNumberInput');
   const linkedOaNumberInput = el('cpoLinkedOaNumberInput');
+  const pickOaBtn = el('cpoPickOaBtn');
 
   const lineItemsContainer = el('cpoLineItemsContainer');
   const addLineItemBtn = el('cpoAddLineItemBtn');
@@ -261,6 +262,34 @@
       state.cpo.client.email = customer.email || '';
       state.cpo.client.phone = customer.phone || '';
       renderHeader();
+      saveDraftLocal();
+    });
+  });
+
+  // Pulls client details, the customer's PO ref, currency and line items straight from an
+  // already-issued Acknowledgement — so a Customer PO recording that order doesn't have to
+  // be re-typed from scratch. Only warns before overwriting if there's existing line-item
+  // work that pulling would replace.
+  pickOaBtn.addEventListener('click', () => {
+    OAModule.openPicker((oa) => {
+      if (state.cpo.lineItems.length &&
+        !confirm('Pull details from ' + oa.oaNumber + '? This replaces the current client details and line items.')) return;
+      state.cpo.client.name = (oa.billTo && oa.billTo.name) || '';
+      state.cpo.client.company = (oa.billTo && oa.billTo.name) || '';
+      state.cpo.client.phone = (oa.billTo && oa.billTo.phone) || '';
+      state.cpo.linkedOaNumber = oa.oaNumber || '';
+      if (oa.sourceQuoteNumber) state.cpo.linkedQuoteNumber = oa.sourceQuoteNumber;
+      if (oa.customerPoRef) state.cpo.customerPoNumber = oa.customerPoRef;
+      state.cpo.currency = oa.currency || 'ZMW';
+      state.cpo.lineItems = (oa.lineItems || []).map((li) => ({
+        id: Core.uid(),
+        description: li.description || '',
+        itemCode: li.itemCode || '',
+        qty: Number(li.qty) || 0,
+        unit: li.unit || 'Each',
+        unitPrice: Number(li.unitPrice) || 0
+      }));
+      renderAll();
       saveDraftLocal();
     });
   });

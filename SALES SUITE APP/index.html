@@ -452,7 +452,12 @@
                 <label>Phone<input type="tel" id="cpoClientPhoneInput"></label>
               </div>
 
-              <p class="field-label">Linked records (optional)</p>
+              <div class="doc-meta-row">
+                <p class="field-label" style="margin:0;">Linked records (optional)</p>
+                <div class="action-row" style="flex:none; gap:8px;">
+                  <button type="button" class="text-btn" id="cpoPickOaBtn">Pull from acknowledgement</button>
+                </div>
+              </div>
               <div class="form-grid">
                 <label>Quote number<input type="text" id="cpoLinkedQuoteNumberInput" placeholder="Q-..."></label>
                 <label>Acknowledgement number<input type="text" id="cpoLinkedOaNumberInput" placeholder="CL-..."></label>
@@ -828,6 +833,17 @@
       <div class="action-row" style="margin-top:16px;">
         <button type="button" class="pill-btn" id="oaSourcePoConfirmBtn">Create Purchase Order</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ---------- Acknowledgement picker modal (used by Customer PO "pull from acknowledgement") ---------- -->
+  <div class="modal-overlay" id="oaPickerModal">
+    <div class="modal-card">
+      <button class="modal-close" id="oaPickerModalClose" aria-label="Close">✕</button>
+      <h2>Pick an acknowledgement</h2>
+      <input type="text" id="oaPickerSearchInput" placeholder="Search by acknowledgement #, customer PO # or customer name">
+      <div id="oaPickerList" style="margin-top:12px; max-height:320px; overflow-y:auto;"></div>
+      <p class="empty-state" id="oaPickerEmptyState">No saved acknowledgements yet.</p>
     </div>
   </div>
 

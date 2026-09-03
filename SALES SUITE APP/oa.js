@@ -63,6 +63,52 @@
   const historyListEl = el('oaHistoryList');
   const historyEmptyState = el('oaHistoryEmptyState');
 
+  // ---------- shared picker (used by Customer PO's "Pull from acknowledgement") ----------
+  const oaPickerModal = el('oaPickerModal');
+  const oaPickerModalClose = el('oaPickerModalClose');
+  const oaPickerSearchInput = el('oaPickerSearchInput');
+  const oaPickerList = el('oaPickerList');
+  const oaPickerEmptyState = el('oaPickerEmptyState');
+  let pickerCallback = null;
+
+  function renderOaPickerList() {
+    const q = (oaPickerSearchInput.value || '').trim().toLowerCase();
+    const filtered = state.historyItems.filter((item) => {
+      if (!q) return true;
+      return (item.oaNumber || '').toLowerCase().includes(q)
+        || (item.customerPoRef || '').toLowerCase().includes(q)
+        || ((item.billTo && item.billTo.name) || '').toLowerCase().includes(q);
+    });
+    oaPickerEmptyState.style.display = filtered.length ? 'none' : 'block';
+    oaPickerList.innerHTML = filtered.map((item) => `
+      <div class="history-row" data-item-id="${item.id}" role="button" tabindex="0">
+        <div class="history-main">
+          <div class="history-title">${Core.escapeHtml(item.oaNumber)}</div>
+          <div class="history-sub">${Core.escapeHtml((item.billTo && item.billTo.name) || 'No customer')} · Their PO ${Core.escapeHtml(item.customerPoRef || '—')}</div>
+        </div>
+      </div>`).join('');
+  }
+  oaPickerSearchInput.addEventListener('input', renderOaPickerList);
+  oaPickerList.addEventListener('click', (e) => {
+    const row = e.target.closest('[data-item-id]');
+    if (!row || !pickerCallback) return;
+    const item = state.historyItems.find((i) => i.id === row.dataset.itemId);
+    if (!item) return;
+    const cb = pickerCallback;
+    pickerCallback = null;
+    oaPickerModal.classList.remove('open');
+    cb(item);
+  });
+  oaPickerModalClose.addEventListener('click', () => { oaPickerModal.classList.remove('open'); pickerCallback = null; });
+  oaPickerModal.addEventListener('click', (e) => { if (e.target === oaPickerModal) { oaPickerModal.classList.remove('open'); pickerCallback = null; } });
+
+  function openPicker(onSelect) {
+    pickerCallback = onSelect;
+    oaPickerSearchInput.value = '';
+    renderOaPickerList();
+    oaPickerModal.classList.add('open');
+  }
+
   function loadDraft() {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
@@ -656,6 +702,7 @@
       .onSnapshot((snap) => {
         state.historyItems = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
         renderHistory();
+        renderOaPickerList();
       }, (err) => setSaveStatus('History sync error: ' + err.message, true));
   });
 
@@ -671,5 +718,5 @@
   switchView('editor');
   renderHistory();
 
-  global.OAModule = { startFromQuote, state };
+  global.OAModule = { startFromQuote, openPicker, state };
 })(window);
