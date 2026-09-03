@@ -34,12 +34,16 @@
   const navAcknowledgementsBtn = el('navAcknowledgementsBtn');
   const navCatalogBtn = el('navCatalogBtn');
   const navCustomersBtn = el('navCustomersBtn');
+  const navSuppliersBtn = el('navSuppliersBtn');
+  const navPurchaseOrdersBtn = el('navPurchaseOrdersBtn');
   const navReportsBtn = el('navReportsBtn');
   const dashboardSection = el('dashboardSection');
   const quotesSection = el('quotesSection');
   const acknowledgementsSection = el('acknowledgementsSection');
   const catalogSection = el('catalogSection');
   const customersSection = el('customersSection');
+  const suppliersSection = el('suppliersSection');
+  const purchaseOrdersSection = el('purchaseOrdersSection');
   const reportsSection = el('reportsSection');
   const dashboardGreetingText = el('dashboardGreetingText');
   const dashboardGrid = document.querySelector('.dashboard-grid');
@@ -314,12 +318,16 @@
     acknowledgementsSection.style.display = view === 'acknowledgements' ? '' : 'none';
     catalogSection.style.display = view === 'catalog' ? '' : 'none';
     customersSection.style.display = view === 'customers' ? '' : 'none';
+    suppliersSection.style.display = view === 'suppliers' ? '' : 'none';
+    purchaseOrdersSection.style.display = view === 'purchase-orders' ? '' : 'none';
     reportsSection.style.display = view === 'reports' ? '' : 'none';
     navDashboardBtn.classList.toggle('active', view === 'dashboard');
     navQuotesBtn.classList.toggle('active', view === 'quotes');
     navAcknowledgementsBtn.classList.toggle('active', view === 'acknowledgements');
     navCatalogBtn.classList.toggle('active', view === 'catalog');
     navCustomersBtn.classList.toggle('active', view === 'customers');
+    navSuppliersBtn.classList.toggle('active', view === 'suppliers');
+    navPurchaseOrdersBtn.classList.toggle('active', view === 'purchase-orders');
     navReportsBtn.classList.toggle('active', view === 'reports');
   }
   navDashboardBtn.addEventListener('click', () => switchTopNav('dashboard'));
@@ -327,6 +335,8 @@
   navAcknowledgementsBtn.addEventListener('click', () => switchTopNav('acknowledgements'));
   navCatalogBtn.addEventListener('click', () => switchTopNav('catalog'));
   navCustomersBtn.addEventListener('click', () => switchTopNav('customers'));
+  navSuppliersBtn.addEventListener('click', () => switchTopNav('suppliers'));
+  navPurchaseOrdersBtn.addEventListener('click', () => switchTopNav('purchase-orders'));
   navReportsBtn.addEventListener('click', () => switchTopNav('reports'));
 
   // ---------- dashboard quick actions ----------
@@ -359,11 +369,31 @@
       case 'customers':
         switchTopNav('customers');
         break;
+      case 'suppliers':
+        switchTopNav('suppliers');
+        break;
+      case 'purchase-orders':
+        switchTopNav('purchase-orders');
+        break;
       case 'reports':
         switchTopNav('reports');
         break;
     }
   });
+
+  // ---------- purchase orders: customer/supplier type toggle ----------
+  const poTypeCustomerBtn = el('poTypeCustomerBtn');
+  const poTypeSupplierBtn = el('poTypeSupplierBtn');
+  const cpoTypeView = el('cpoTypeView');
+  const poTypeView = el('poTypeView');
+  function switchPoType(type) {
+    cpoTypeView.style.display = type === 'customer' ? '' : 'none';
+    poTypeView.style.display = type === 'supplier' ? '' : 'none';
+    poTypeCustomerBtn.classList.toggle('active', type === 'customer');
+    poTypeSupplierBtn.classList.toggle('active', type === 'supplier');
+  }
+  poTypeCustomerBtn.addEventListener('click', () => switchPoType('customer'));
+  poTypeSupplierBtn.addEventListener('click', () => switchPoType('supplier'));
 
   // ---------- settings modal (company letterhead) ----------
   function renderLogoPreview(dataUrl) {

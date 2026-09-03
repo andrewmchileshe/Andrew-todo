@@ -36,6 +36,11 @@
 
   const lineItemsContainer = el('oaLineItemsContainer');
   const addLineItemBtn = el('oaAddLineItemBtn');
+  const createPoBtn = el('oaCreatePoBtn');
+  const sourcePoModal = el('oaSourcePoModal');
+  const sourcePoModalClose = el('oaSourcePoModalClose');
+  const sourcePoItemList = el('oaSourcePoItemList');
+  const sourcePoConfirmBtn = el('oaSourcePoConfirmBtn');
 
   const paymentTermsInput = el('oaPaymentTermsInput');
   const incotermsInput = el('oaIncotermsInput');
@@ -520,6 +525,29 @@
   newBtn.addEventListener('click', () => {
     if (!confirm('Start a new Acknowledgement? Unsaved changes to the current one will be lost.')) return;
     newBlankAndRender();
+  });
+
+  // ---------- create a Purchase Order from this acknowledgement's line items ----------
+  createPoBtn.addEventListener('click', () => {
+    if (!state.oa.lineItems.length) { setSaveStatus('Add line items before sourcing a purchase order.', true); return; }
+    sourcePoItemList.innerHTML = state.oa.lineItems.map((item) => `
+      <label class="checkbox-row" data-item-id="${item.id}">
+        <input type="checkbox" checked />
+        ${Core.escapeHtml(item.description || 'Untitled item')} — Qty ${item.qty || 0}
+      </label>`).join('');
+    sourcePoModal.classList.add('open');
+  });
+  sourcePoModalClose.addEventListener('click', () => sourcePoModal.classList.remove('open'));
+  sourcePoConfirmBtn.addEventListener('click', () => {
+    const checkedIds = [...sourcePoItemList.querySelectorAll('[data-item-id]')]
+      .filter((row) => row.querySelector('input[type="checkbox"]').checked)
+      .map((row) => row.dataset.itemId);
+    const selected = state.oa.lineItems.filter((li) => checkedIds.includes(li.id));
+    if (!selected.length) { alert('Pick at least one item to source.'); return; }
+    sourcePoModal.classList.remove('open');
+    global.PurchaseOrdersModule.startFromOa(state.oa, selected);
+    document.getElementById('navPurchaseOrdersBtn').click();
+    document.getElementById('poTypeSupplierBtn').click();
   });
 
   // ---------- history ----------

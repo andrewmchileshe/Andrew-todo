@@ -66,6 +66,8 @@
         <button type="button" id="navAcknowledgementsBtn">Acknowledgements</button>
         <button type="button" id="navCatalogBtn">Catalog</button>
         <button type="button" id="navCustomersBtn">Customers</button>
+        <button type="button" id="navSuppliersBtn">Suppliers</button>
+        <button type="button" id="navPurchaseOrdersBtn">Purchase Orders</button>
         <button type="button" id="navReportsBtn">Reports</button>
       </div>
 
@@ -105,6 +107,16 @@
             <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
             <span class="dashboard-card-title">Customers</span>
             <span class="dashboard-card-desc">Saved contacts for repeat quoting</span>
+          </button>
+          <button type="button" class="dashboard-card" data-dash-action="suppliers">
+            <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>
+            <span class="dashboard-card-title">Suppliers</span>
+            <span class="dashboard-card-desc">Supplier contacts and their price lists</span>
+          </button>
+          <button type="button" class="dashboard-card" data-dash-action="purchase-orders">
+            <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 13h6"/><path d="M9 17h6"/></svg></span>
+            <span class="dashboard-card-title">Purchase Orders</span>
+            <span class="dashboard-card-desc">Customer POs received and supplier POs placed</span>
           </button>
           <button type="button" class="dashboard-card" data-dash-action="reports">
             <span class="dashboard-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></span>
@@ -290,6 +302,7 @@
             <h2>Line items</h2>
             <div id="oaLineItemsContainer"></div>
             <button type="button" class="add-line-btn" id="oaAddLineItemBtn">+ Add line item</button>
+            <button type="button" class="text-btn" id="oaCreatePoBtn" style="margin-top:8px;">Create Purchase Order from these items</button>
           </div>
 
           <div class="card">
@@ -367,6 +380,207 @@
         <div class="card">
           <div id="customerList"></div>
           <p class="empty-state" id="customerEmptyState">No saved customers yet.</p>
+        </div>
+      </div>
+
+      <!-- ===================== SUPPLIERS ===================== -->
+      <div id="suppliersSection" style="display:none;">
+        <div class="card">
+          <div class="action-row">
+            <input type="text" id="supplierSearchInput" placeholder="Search by name, contact or email" style="flex:1;">
+            <button type="button" class="pill-btn" id="supplierAddBtn" style="flex:none;">+ Add supplier</button>
+          </div>
+        </div>
+        <div class="card">
+          <div id="supplierList"></div>
+          <p class="empty-state" id="supplierEmptyState">No suppliers yet.</p>
+        </div>
+      </div>
+
+      <!-- ===================== PURCHASE ORDERS ===================== -->
+      <div id="purchaseOrdersSection" style="display:none;">
+        <div class="nav-toggle sub">
+          <button type="button" id="poTypeCustomerBtn" class="active">Customer POs</button>
+          <button type="button" id="poTypeSupplierBtn">Supplier POs</button>
+        </div>
+
+        <!-- ---- Customer POs (incoming) ---- -->
+        <div id="cpoTypeView">
+          <div class="nav-toggle sub">
+            <button type="button" id="cpoNavEditorBtn" class="active">Editor</button>
+            <button type="button" id="cpoNavHistoryBtn">History</button>
+          </div>
+
+          <div id="cpoEditorView">
+            <div class="card">
+              <div class="doc-meta-row">
+                <span class="doc-number" id="cpoNumberDisplay"></span>
+                <select id="cpoStatusSelect">
+                  <option value="received">Received</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="fulfilled">Fulfilled</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <p class="history-sub" id="cpoAttributionText" style="display:none;"></p>
+
+              <div class="form-grid">
+                <label>Customer's PO number<input type="text" id="cpoCustomerPoNumberInput"></label>
+                <label>Date on their PO<input type="date" id="cpoPoDateInput"></label>
+                <label>Date received<input type="date" id="cpoReceivedDateInput"></label>
+                <label>Currency
+                  <input type="text" id="cpoCurrencyInput" list="cpoCurrencyList" maxlength="6">
+                  <datalist id="cpoCurrencyList">
+                    <option value="ZMW"><option value="USD"><option value="ZAR"><option value="GBP"><option value="EUR">
+                  </datalist>
+                </label>
+              </div>
+
+              <div class="doc-meta-row">
+                <p class="field-label" style="margin:0;">Customer</p>
+                <div class="action-row" style="flex:none; gap:8px;">
+                  <button type="button" class="text-btn" id="cpoPickCustomerBtn">Pick from customers</button>
+                </div>
+              </div>
+              <div class="form-grid">
+                <label>Name<input type="text" id="cpoClientNameInput"></label>
+                <label>Company<input type="text" id="cpoClientCompanyInput"></label>
+                <label>Email<input type="email" id="cpoClientEmailInput"></label>
+                <label>Phone<input type="tel" id="cpoClientPhoneInput"></label>
+              </div>
+
+              <p class="field-label">Linked records (optional)</p>
+              <div class="form-grid">
+                <label>Quote number<input type="text" id="cpoLinkedQuoteNumberInput" placeholder="Q-..."></label>
+                <label>Acknowledgement number<input type="text" id="cpoLinkedOaNumberInput" placeholder="CL-..."></label>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2>Line items</h2>
+              <div id="cpoLineItemsContainer"></div>
+              <button type="button" class="add-line-btn" id="cpoAddLineItemBtn">+ Add line item</button>
+            </div>
+
+            <div class="card">
+              <h2>Totals</h2>
+              <div class="totals-row"><span>Subtotal</span><span id="cpoSubtotalDisplay">—</span></div>
+            </div>
+
+            <div class="card">
+              <p class="field-label">Notes</p>
+              <textarea id="cpoNotesInput" rows="3"></textarea>
+            </div>
+
+            <div class="card">
+              <div class="action-row">
+                <button type="button" class="pill-btn" id="cpoSaveBtn">Save</button>
+                <button type="button" class="pill-btn secondary" id="cpoNewBtn">New customer PO</button>
+              </div>
+              <p class="save-status-text" id="cpoSaveStatusText"></p>
+            </div>
+          </div>
+
+          <div id="cpoHistoryView" style="display:none;">
+            <div class="card">
+              <input type="text" id="cpoHistorySearchInput" placeholder="Search by our ref, their PO # or company">
+              <div class="toggle-group" id="cpoHistoryStatusTabs" style="margin-top:10px; flex-wrap:wrap;">
+                <button type="button" data-status-filter="all" class="active">All</button>
+                <button type="button" data-status-filter="received">Received</button>
+                <button type="button" data-status-filter="in-progress">In Progress</button>
+                <button type="button" data-status-filter="fulfilled">Fulfilled</button>
+                <button type="button" data-status-filter="cancelled">Cancelled</button>
+              </div>
+            </div>
+            <div class="card">
+              <div id="cpoHistoryList"></div>
+              <p class="empty-state" id="cpoHistoryEmptyState">No customer purchase orders yet.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---- Supplier POs (outgoing) ---- -->
+        <div id="poTypeView" style="display:none;">
+          <div class="nav-toggle sub">
+            <button type="button" id="poNavEditorBtn" class="active">Editor</button>
+            <button type="button" id="poNavHistoryBtn">History</button>
+          </div>
+
+          <div id="poEditorView">
+            <div class="card">
+              <div class="doc-meta-row">
+                <span class="doc-number" id="poNumberDisplay"></span>
+                <select id="poStatusSelect">
+                  <option value="open">Open</option>
+                  <option value="in-transit">In Transit</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <p class="history-sub" id="poSourceOaLine" style="display:none;"></p>
+              <p class="history-sub" id="poAttributionText" style="display:none;"></p>
+
+              <div class="doc-meta-row">
+                <p class="field-label" style="margin:0;">Supplier: <span id="poSupplierNameDisplay">No supplier picked yet</span></p>
+                <div class="action-row" style="flex:none;">
+                  <button type="button" class="text-btn" id="poPickSupplierBtn">Pick supplier</button>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <label>Order date<input type="date" id="poOrderDateInput"></label>
+                <label>Expected date<input type="date" id="poExpectedDateInput"></label>
+                <label>Currency
+                  <input type="text" id="poCurrencyInput" list="poCurrencyList" maxlength="6">
+                  <datalist id="poCurrencyList">
+                    <option value="ZMW"><option value="USD"><option value="ZAR"><option value="GBP"><option value="EUR">
+                  </datalist>
+                </label>
+                <label>Exchange rate to ZMW<input type="number" min="0" step="0.0001" id="poExchangeRateInput"></label>
+              </div>
+
+              <p class="field-label">Notes</p>
+              <textarea id="poNotesInput" rows="3"></textarea>
+            </div>
+
+            <div class="card">
+              <h2>Line items</h2>
+              <div id="poLineItemsContainer"></div>
+              <button type="button" class="add-line-btn" id="poAddLineItemBtn">+ Add line item</button>
+            </div>
+
+            <div class="card">
+              <h2>Totals</h2>
+              <div class="totals-row"><span>Subtotal</span><span id="poSubtotalDisplay">—</span></div>
+              <div class="totals-row"><span>Value in Kwacha</span><span id="poKwachaValueDisplay">—</span></div>
+            </div>
+
+            <div class="card">
+              <div class="action-row">
+                <button type="button" class="pill-btn" id="poSaveBtn">Save</button>
+                <button type="button" class="pill-btn secondary" id="poDownloadPdfBtn">Download PDF</button>
+                <button type="button" class="pill-btn secondary" id="poNewBtn">New purchase order</button>
+              </div>
+              <p class="save-status-text" id="poSaveStatusText"></p>
+            </div>
+          </div>
+
+          <div id="poHistoryView" style="display:none;">
+            <div class="card">
+              <input type="text" id="poHistorySearchInput" placeholder="Search by PO # or supplier">
+              <div class="toggle-group" id="poHistoryStatusTabs" style="margin-top:10px; flex-wrap:wrap;">
+                <button type="button" data-status-filter="all" class="active">All</button>
+                <button type="button" data-status-filter="open">Open</button>
+                <button type="button" data-status-filter="in-transit">In Transit</button>
+                <button type="button" data-status-filter="delivered">Delivered</button>
+                <button type="button" data-status-filter="cancelled">Cancelled</button>
+              </div>
+            </div>
+            <div class="card">
+              <div id="poHistoryList"></div>
+              <p class="empty-state" id="poHistoryEmptyState">No purchase orders yet.</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -505,6 +719,96 @@
     </div>
   </div>
 
+  <!-- ---------- Supplier add/edit modal (with nested item/price list) ---------- -->
+  <div class="modal-overlay" id="supplierModal">
+    <div class="modal-card">
+      <button class="modal-close" id="supplierModalClose" aria-label="Close">✕</button>
+      <h2 id="supplierModalTitle">Add supplier</h2>
+      <div class="form-grid">
+        <label>Supplier name<input type="text" id="supplierNameInput"></label>
+        <label>Contact name<input type="text" id="supplierContactNameInput"></label>
+      </div>
+      <div class="form-grid">
+        <label>Email<input type="email" id="supplierEmailInput"></label>
+        <label>Phone<input type="tel" id="supplierPhoneInput"></label>
+      </div>
+      <p class="field-label">Address</p>
+      <textarea id="supplierAddressInput" rows="3"></textarea>
+
+      <div class="action-row" style="margin-top:16px;">
+        <button type="button" class="pill-btn" id="supplierSaveBtn">Save</button>
+        <button type="button" class="pill-btn secondary" id="supplierDeleteBtn" style="display:none;">Delete</button>
+      </div>
+      <p class="save-status-text" id="supplierStatusText"></p>
+
+      <div id="supplierItemsSection" style="display:none; margin-top:20px;">
+        <div class="doc-meta-row">
+          <p class="field-label" style="margin:0;">Items this supplier provides</p>
+          <button type="button" class="text-btn" id="supplierAddItemBtn">+ Add item</button>
+        </div>
+        <div id="supplierItemsList"></div>
+        <p class="empty-state" id="supplierItemsEmptyState">No items saved for this supplier yet.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- Supplier item add/edit modal ---------- -->
+  <div class="modal-overlay" id="supplierItemModal">
+    <div class="modal-card">
+      <button class="modal-close" id="supplierItemModalClose" aria-label="Close">✕</button>
+      <h2 id="supplierItemModalTitle">Add item</h2>
+      <div class="form-grid">
+        <label>Item code<input type="text" id="supplierItemCodeInput"></label>
+        <label>Unit<input type="text" id="supplierItemUnitInput"></label>
+      </div>
+      <label>Description<input type="text" id="supplierItemDescriptionInput"></label>
+      <div class="form-grid">
+        <label>Price<input type="number" min="0" step="0.01" id="supplierItemPriceInput"></label>
+        <label>Currency<input type="text" id="supplierItemCurrencyInput" maxlength="6"></label>
+      </div>
+      <div class="action-row" style="margin-top:16px;">
+        <button type="button" class="pill-btn" id="supplierItemSaveBtn">Save</button>
+        <button type="button" class="pill-btn secondary" id="supplierItemDeleteBtn" style="display:none;">Delete</button>
+      </div>
+      <p class="save-status-text" id="supplierItemStatusText"></p>
+    </div>
+  </div>
+
+  <!-- ---------- Supplier picker modal (used by Supplier POs) ---------- -->
+  <div class="modal-overlay" id="supplierPickerModal">
+    <div class="modal-card">
+      <button class="modal-close" id="supplierPickerModalClose" aria-label="Close">✕</button>
+      <h2>Pick a supplier</h2>
+      <input type="text" id="supplierPickerSearchInput" placeholder="Search by name, contact or email">
+      <div id="supplierPickerList" style="margin-top:12px; max-height:320px; overflow-y:auto;"></div>
+      <p class="empty-state" id="supplierPickerEmptyState">No saved suppliers yet — add one from the Suppliers tab.</p>
+    </div>
+  </div>
+
+  <!-- ---------- Supplier item picker modal (used by Supplier POs, once a supplier is chosen) ---------- -->
+  <div class="modal-overlay" id="supplierItemPickerModal">
+    <div class="modal-card">
+      <button class="modal-close" id="supplierItemPickerModalClose" aria-label="Close">✕</button>
+      <h2 id="supplierItemPickerTitle">Pick an item</h2>
+      <input type="text" id="supplierItemPickerSearchInput" placeholder="Search by item code or description">
+      <div id="supplierItemPickerList" style="margin-top:12px; max-height:320px; overflow-y:auto;"></div>
+      <p class="empty-state" id="supplierItemPickerEmptyState">This supplier has no saved items yet.</p>
+    </div>
+  </div>
+
+  <!-- ---------- Source Purchase Order modal (used by Acknowledgements) ---------- -->
+  <div class="modal-overlay" id="oaSourcePoModal">
+    <div class="modal-card">
+      <button class="modal-close" id="oaSourcePoModalClose" aria-label="Close">✕</button>
+      <h2>Create Purchase Order</h2>
+      <p class="sub">Pick which line items need sourcing from a supplier. Prices are left blank — that's the supplier's cost, not what the customer was charged.</p>
+      <div id="oaSourcePoItemList"></div>
+      <div class="action-row" style="margin-top:16px;">
+        <button type="button" class="pill-btn" id="oaSourcePoConfirmBtn">Create Purchase Order</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ---------- Customer picker modal (used by Quotes and Acknowledgements) ---------- -->
   <div class="modal-overlay" id="customerPickerModal">
     <div class="modal-card">
@@ -544,11 +848,15 @@
   <script src="quote-pdf.js"></script>
   <script src="oa-pdf.js"></script>
   <script src="catalog-pdf.js"></script>
+  <script src="po-pdf.js"></script>
   <script src="core.js"></script>
   <script src="catalog.js"></script>
   <script src="customers.js"></script>
+  <script src="suppliers.js"></script>
   <script src="quotes.js"></script>
   <script src="oa.js"></script>
+  <script src="purchase-orders.js"></script>
+  <script src="customer-purchase-orders.js"></script>
   <script src="reports.js"></script>
 </body>
 </html>

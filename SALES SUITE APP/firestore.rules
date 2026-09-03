@@ -40,6 +40,17 @@ service cloud.firestore {
       match /acknowledgements/{oaId} {
         allow read, write: if hasCompanyAccess(companyId);
       }
+
+      // Purchase orders — company-scoped like quotations/acknowledgements, since each
+      // company carries its own financial obligations to suppliers and its own record
+      // of what its customers ordered.
+      match /purchaseOrders/{poId} {
+        allow read, write: if hasCompanyAccess(companyId);
+      }
+
+      match /customerPurchaseOrders/{cpoId} {
+        allow read, write: if hasCompanyAccess(companyId);
+      }
     }
 
     // Product catalog is shared across all three companies — the same items get
@@ -53,6 +64,16 @@ service cloud.firestore {
     // customer often buys from more than one, so contact details are entered once.
     match /customers/{customerId} {
       allow read, write: if signedIn();
+    }
+
+    // Supplier directory is shared for the same reason the catalog and customer
+    // directories are — the same supplier can serve more than one company.
+    match /suppliers/{supplierId} {
+      allow read, write: if signedIn();
+
+      match /items/{itemId} {
+        allow read, write: if signedIn();
+      }
     }
   }
 }

@@ -117,11 +117,34 @@
     };
   }
 
+  // Simple qty * unitPrice line total, shared by Supplier POs and Customer POs — the
+  // unit price is already whatever was agreed/stated (no cost/margin build-up).
+  function computePoLineTotal(item) {
+    return round2((Number(item.qty) || 0) * (Number(item.unitPrice) || 0));
+  }
+
+  function computePoTotals(po) {
+    const subtotal = (po.lineItems || []).reduce(function (sum, item) {
+      return sum + computePoLineTotal(item);
+    }, 0);
+    // Outstanding POs are valued in Kwacha regardless of the PO's own transaction
+    // currency, using a manually-entered rate — same pattern as line-item exchange
+    // rates elsewhere in the app rather than a live FX feed.
+    const exchangeRateToKwacha = Number(po.exchangeRateToKwacha) || 1;
+    const kwachaValue = subtotal * exchangeRateToKwacha;
+    return {
+      subtotal: round2(subtotal),
+      kwachaValue: round2(kwachaValue)
+    };
+  }
+
   global.Pricing = {
     computeLineItem: computeLineItem,
     computeTotals: computeTotals,
     computeOaLineTotal: computeOaLineTotal,
     computeOaTotals: computeOaTotals,
+    computePoLineTotal: computePoLineTotal,
+    computePoTotals: computePoTotals,
     round2: round2
   };
 })(window);
