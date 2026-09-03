@@ -35,6 +35,7 @@
   const notesInput = el('poNotesInput');
 
   const saveBtn = el('poSaveBtn');
+  const saveAndNewBtn = el('poSaveAndNewBtn');
   const downloadPdfBtn = el('poDownloadPdfBtn');
   const newBtn = el('poNewBtn');
   const saveStatusText = el('poSaveStatusText');
@@ -402,21 +403,26 @@
     };
   }
 
-  function savePo() {
+  // onSaved (optional) fires only after a successful save — used by "Save & new" to chain
+  // straight into a freshly-numbered purchase order without a second click.
+  function savePo(onSaved) {
     if (state.saving) return;
     saveDraftLocal();
     if (!Core.state.db) { setSaveStatus('Not connected — see SETUP.md.', true); return; }
     if (!state.po.supplierId) { setSaveStatus('Pick a supplier before saving.', true); return; }
     state.saving = true;
     saveBtn.disabled = true;
+    saveAndNewBtn.disabled = true;
     setSaveStatus('Saving…');
     const docData = buildFirestoreDoc();
     const colRef = companyCollection();
     const done = (ok, err) => {
       state.saving = false;
       saveBtn.disabled = false;
+      saveAndNewBtn.disabled = false;
       if (ok) state.lastSavedJson = JSON.stringify(state.po);
       setSaveStatus(ok ? 'Saved' : ('Save failed: ' + (err && err.message ? err.message : 'check your connection and permissions')), !ok);
+      if (ok && onSaved) onSaved();
     };
     if (state.po.id) {
       colRef.doc(state.po.id).set(docData, { merge: true }).then(() => done(true)).catch((err) => done(false, err));
@@ -430,7 +436,7 @@
         .catch((err) => done(false, err));
     }
   }
-  saveBtn.addEventListener('click', savePo);
+  saveBtn.addEventListener('click', () => savePo());
 
   downloadPdfBtn.addEventListener('click', () => {
     if (!confirmUnsavedExport('Download')) return;
@@ -442,6 +448,8 @@
     if (!confirm('Start a new purchase order? Unsaved changes to the current one will be lost.')) return;
     newBlankAndRender();
   });
+
+  saveAndNewBtn.addEventListener('click', () => savePo(newBlankAndRender));
 
   // ---------- history ----------
   function normalizeLoaded(doc) {

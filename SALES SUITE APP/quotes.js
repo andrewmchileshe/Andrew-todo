@@ -52,6 +52,7 @@
   const grandTotalDisplay = el('quoteGrandTotalDisplay');
 
   const saveBtn = el('quoteSaveBtn');
+  const saveAndNewBtn = el('quoteSaveAndNewBtn');
   const downloadPdfBtn = el('quoteDownloadPdfBtn');
   const newQuoteBtn = el('quoteNewBtn');
   const saveStatusText = el('quoteSaveStatusText');
@@ -645,7 +646,9 @@
   // Fixes the old app's double-save race: while a save is in flight the button is
   // disabled and re-clicks are ignored, so a slow connection can't fire two "create"
   // writes before the first one's response sets state.quotation.id.
-  function saveQuotation() {
+  // onSaved (optional) fires only after a successful save — used by "Save & new" to chain
+  // straight into a blank quotation without a second click.
+  function saveQuotation(onSaved) {
     if (state.saving) return;
     saveDraftLocal();
     if (!Core.state.db) {
@@ -654,14 +657,17 @@
     }
     state.saving = true;
     saveBtn.disabled = true;
+    saveAndNewBtn.disabled = true;
     setSaveStatus('Saving…');
     const docData = buildFirestoreDoc();
     const colRef = companyCollection();
     const done = (ok, err) => {
       state.saving = false;
       saveBtn.disabled = false;
+      saveAndNewBtn.disabled = false;
       if (ok) state.lastSavedJson = JSON.stringify(state.quotation);
       setSaveStatus(ok ? 'Saved' : ('Save failed: ' + (err && err.message ? err.message : 'check your connection and permissions')), !ok);
+      if (ok && onSaved) onSaved();
     };
     if (state.quotation.id) {
       colRef.doc(state.quotation.id).set(docData, { merge: true }).then(() => done(true)).catch((err) => done(false, err));
@@ -676,7 +682,7 @@
     }
   }
 
-  saveBtn.addEventListener('click', saveQuotation);
+  saveBtn.addEventListener('click', () => saveQuotation());
 
   downloadPdfBtn.addEventListener('click', () => {
     if (!confirmUnsavedExport('Download')) return;
@@ -684,13 +690,24 @@
     QuotePdf.generateQuotationPdf(state.quotation, totals, Core.companyForPdf());
   });
 
-  newQuoteBtn.addEventListener('click', () => {
-    if (!confirm('Start a new quotation? Unsaved changes to the current one will be lost.')) return;
+  function startNewQuotation() {
     state.quotation = blankQuotation();
     state.lastSavedJson = null;
     renderAll();
     saveDraftLocal();
+  }
+
+  newQuoteBtn.addEventListener('click', () => {
+    if (!confirm('Start a new quotation? Unsaved changes to the current one will be lost.')) return;
+    startNewQuotation();
     setSaveStatus('');
+  });
+
+  saveAndNewBtn.addEventListener('click', () => {
+    saveQuotation(() => {
+      startNewQuotation();
+      setSaveStatus('Saved — ready for a new quotation.');
+    });
   });
 
   // ---------- history ----------

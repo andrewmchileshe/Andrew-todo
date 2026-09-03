@@ -54,6 +54,7 @@
   const totalDisplay = el('oaTotalDisplay');
 
   const saveBtn = el('oaSaveBtn');
+  const saveAndNewBtn = el('oaSaveAndNewBtn');
   const downloadPdfBtn = el('oaDownloadPdfBtn');
   const newBtn = el('oaNewBtn');
   const saveStatusText = el('oaSaveStatusText');
@@ -480,7 +481,9 @@
     };
   }
 
-  function saveOa() {
+  // onSaved (optional) fires only after a successful save — used by "Save & new" to chain
+  // straight into a freshly-numbered Acknowledgement without a second click.
+  function saveOa(onSaved) {
     if (state.saving) return;
     saveDraftLocal();
     if (!Core.state.db) {
@@ -493,14 +496,17 @@
     }
     state.saving = true;
     saveBtn.disabled = true;
+    saveAndNewBtn.disabled = true;
     setSaveStatus('Saving…');
     const docData = buildFirestoreDoc();
     const colRef = companyCollection();
     const done = (ok, err) => {
       state.saving = false;
       saveBtn.disabled = false;
+      saveAndNewBtn.disabled = false;
       if (ok) state.lastSavedJson = JSON.stringify(state.oa);
       setSaveStatus(ok ? 'Saved' : ('Save failed: ' + (err && err.message ? err.message : 'check your connection and permissions')), !ok);
+      if (ok && onSaved) onSaved();
     };
     if (state.oa.id) {
       colRef.doc(state.oa.id).set(docData, { merge: true }).then(() => done(true)).catch((err) => done(false, err));
@@ -514,7 +520,7 @@
         .catch((err) => done(false, err));
     }
   }
-  saveBtn.addEventListener('click', saveOa);
+  saveBtn.addEventListener('click', () => saveOa());
 
   downloadPdfBtn.addEventListener('click', () => {
     if (!confirmUnsavedExport('Download')) return;
@@ -526,6 +532,8 @@
     if (!confirm('Start a new Acknowledgement? Unsaved changes to the current one will be lost.')) return;
     newBlankAndRender();
   });
+
+  saveAndNewBtn.addEventListener('click', () => saveOa(newBlankAndRender));
 
   // ---------- create a Purchase Order from this acknowledgement's line items ----------
   createPoBtn.addEventListener('click', () => {
