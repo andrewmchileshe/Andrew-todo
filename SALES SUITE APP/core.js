@@ -350,10 +350,12 @@
       case 'new-quote':
         switchTopNav('quotes');
         el('quoteNavEditorBtn').click();
+        el('quoteNewBtn').click();
         break;
       case 'new-oa':
         switchTopNav('acknowledgements');
         el('oaNavEditorBtn').click();
+        el('oaNewBtn').click();
         break;
       case 'quote-history':
         switchTopNav('quotes');
