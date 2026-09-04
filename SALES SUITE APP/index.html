@@ -777,7 +777,10 @@
       <div id="supplierItemsSection" style="display:none; margin-top:20px;">
         <div class="doc-meta-row">
           <p class="field-label" style="margin:0;">Items this supplier provides</p>
-          <button type="button" class="text-btn" id="supplierAddItemBtn">+ Add item</button>
+          <div class="action-row" style="flex:none; gap:8px;">
+            <button type="button" class="text-btn" id="supplierBulkUploadItemsBtn">Bulk upload</button>
+            <button type="button" class="text-btn" id="supplierAddItemBtn">+ Add item</button>
+          </div>
         </div>
         <div id="supplierItemsList"></div>
         <p class="empty-state" id="supplierItemsEmptyState">No items saved for this supplier yet.</p>
@@ -790,6 +793,7 @@
     <div class="modal-card">
       <button class="modal-close" id="supplierItemModalClose" aria-label="Close">✕</button>
       <h2 id="supplierItemModalTitle">Add item</h2>
+      <button type="button" class="text-btn" id="supplierItemPickCatalogBtn">Pick from catalog</button>
       <div class="form-grid">
         <label>Item code<input type="text" id="supplierItemCodeInput"></label>
         <label>Unit<input type="text" id="supplierItemUnitInput"></label>
@@ -804,6 +808,23 @@
         <button type="button" class="pill-btn secondary" id="supplierItemDeleteBtn" style="display:none;">Delete</button>
       </div>
       <p class="save-status-text" id="supplierItemStatusText"></p>
+    </div>
+  </div>
+
+  <!-- ---------- Supplier item bulk upload modal ---------- -->
+  <div class="modal-overlay" id="supplierItemBulkUploadModal">
+    <div class="modal-card">
+      <button class="modal-close" id="supplierItemBulkUploadModalClose" aria-label="Close">✕</button>
+      <h2>Bulk upload items</h2>
+      <p class="sub">A CSV file with a header row, for the supplier currently open. Columns (any order, case-insensitive): <strong>itemCode, description, unit, price, currency</strong>. Only <strong>description</strong> is required — everything else defaults sensibly if left blank. This always adds new items; it doesn't update or replace existing ones.</p>
+      <button type="button" class="text-btn" id="supplierItemDownloadTemplateBtn">Download a CSV template</button>
+      <p class="field-label">CSV file</p>
+      <input type="file" accept=".csv,text/csv" id="supplierItemBulkFileInput">
+      <p class="save-status-text" id="supplierItemBulkStatusText"></p>
+      <div id="supplierItemBulkPreview" style="display:none; margin-top:12px;">
+        <p class="field-label" id="supplierItemBulkPreviewCount"></p>
+        <button type="button" class="pill-btn" id="supplierItemBulkConfirmBtn" style="width:100%;">Import</button>
+      </div>
     </div>
   </div>
 

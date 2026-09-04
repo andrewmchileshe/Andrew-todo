@@ -32,6 +32,7 @@
   const itemModal = el('supplierItemModal');
   const itemModalClose = el('supplierItemModalClose');
   const itemModalTitle = el('supplierItemModalTitle');
+  const itemPickCatalogBtn = el('supplierItemPickCatalogBtn');
   const itemCodeInput = el('supplierItemCodeInput');
   const itemDescriptionInput = el('supplierItemDescriptionInput');
   const itemUnitInput = el('supplierItemUnitInput');
@@ -40,6 +41,16 @@
   const itemSaveBtn = el('supplierItemSaveBtn');
   const itemDeleteBtn = el('supplierItemDeleteBtn');
   const itemStatusText = el('supplierItemStatusText');
+
+  const bulkUploadItemsBtn = el('supplierBulkUploadItemsBtn');
+  const itemBulkModal = el('supplierItemBulkUploadModal');
+  const itemBulkModalClose = el('supplierItemBulkUploadModalClose');
+  const itemBulkDownloadTemplateBtn = el('supplierItemDownloadTemplateBtn');
+  const itemBulkFileInput = el('supplierItemBulkFileInput');
+  const itemBulkStatusText = el('supplierItemBulkStatusText');
+  const itemBulkPreview = el('supplierItemBulkPreview');
+  const itemBulkPreviewCount = el('supplierItemBulkPreviewCount');
+  const itemBulkConfirmBtn = el('supplierItemBulkConfirmBtn');
 
   const pickerModal = el('supplierPickerModal');
   const pickerModalClose = el('supplierPickerModalClose');
@@ -287,6 +298,19 @@
 
   itemModalClose.addEventListener('click', () => itemModal.classList.remove('open'));
 
+  // Pulls item code/description/unit from the shared catalog, with the catalog's cost
+  // side as a starting price reference — the actual supplier-quoted price still needs
+  // confirming, same as when picking a catalog item into a Supplier PO line.
+  itemPickCatalogBtn.addEventListener('click', () => {
+    CatalogModule.openPicker((catalogItem) => {
+      itemCodeInput.value = catalogItem.itemCode || '';
+      itemDescriptionInput.value = catalogItem.description || '';
+      itemUnitInput.value = catalogItem.unit || 'Each';
+      itemPriceInput.value = Number(catalogItem.costPrice) || 0;
+      itemCurrencyInput.value = catalogItem.costCurrency || 'ZMW';
+    });
+  });
+
   itemSaveBtn.addEventListener('click', () => {
     if (state.itemSaving || !state.editingId) return;
     if (!itemDescriptionInput.value.trim()) { itemStatusText.textContent = 'Description is required.'; return; }
@@ -322,6 +346,131 @@
     supplierItemsCollection(state.editingId).doc(state.editingItemId).delete()
       .then(() => itemModal.classList.remove('open'))
       .catch((err) => { itemStatusText.textContent = 'Delete failed: ' + err.message; });
+  });
+
+  // ---------- bulk upload items (CSV, scoped to whichever supplier is open) ----------
+  const ITEM_BULK_COLUMNS = ['itemCode', 'description', 'unit', 'price', 'currency'];
+  let itemBulkParsedItems = null;
+
+  // Minimal CSV parser: handles quoted fields (with embedded commas/newlines) and "" escaping.
+  function parseItemCsv(text) {
+    const rows = [];
+    let row = [], field = '', inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { field += '"'; i++; } else { inQuotes = false; }
+        } else { field += c; }
+      } else if (c === '"') {
+        inQuotes = true;
+      } else if (c === ',') {
+        row.push(field); field = '';
+      } else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(field); field = '';
+        if (row.length > 1 || row[0] !== '') rows.push(row);
+        row = [];
+      } else {
+        field += c;
+      }
+    }
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  function itemRowsToItems(rows) {
+    if (!rows.length) return { items: [], skipped: 0 };
+    const header = rows[0].map((h) => h.trim().toLowerCase());
+    const colIndex = {};
+    ITEM_BULK_COLUMNS.forEach((name) => { colIndex[name] = header.indexOf(name.toLowerCase()); });
+
+    const items = [];
+    let skipped = 0;
+    for (let r = 1; r < rows.length; r++) {
+      const cells = rows[r];
+      const get = (name) => (colIndex[name] >= 0 ? (cells[colIndex[name]] || '').trim() : '');
+      const description = get('description');
+      if (!description) { skipped++; continue; }
+      items.push({
+        itemCode: get('itemCode'),
+        description: description,
+        unit: get('unit') || 'Each',
+        price: Number(get('price')) || 0,
+        currency: (get('currency') || 'ZMW').toUpperCase()
+      });
+    }
+    return { items, skipped };
+  }
+
+  bulkUploadItemsBtn.addEventListener('click', () => {
+    if (!state.editingId) return;
+    itemBulkFileInput.value = '';
+    itemBulkStatusText.textContent = '';
+    itemBulkPreview.style.display = 'none';
+    itemBulkParsedItems = null;
+    itemBulkModal.classList.add('open');
+  });
+  itemBulkModalClose.addEventListener('click', () => itemBulkModal.classList.remove('open'));
+
+  itemBulkDownloadTemplateBtn.addEventListener('click', () => {
+    const sample = ITEM_BULK_COLUMNS.join(',') + '\n' +
+      'ACM-100,Sodium Hypochlorite 12.5% 25L,Drum,850,ZAR\n';
+    const blob = new Blob([sample], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'supplier-items-upload-template.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  itemBulkFileInput.addEventListener('change', () => {
+    const file = itemBulkFileInput.files && itemBulkFileInput.files[0];
+    itemBulkPreview.style.display = 'none';
+    itemBulkParsedItems = null;
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const rows = parseItemCsv(String(reader.result));
+      const { items, skipped } = itemRowsToItems(rows);
+      if (!items.length) {
+        itemBulkStatusText.textContent = 'No valid rows found — check that the file has a header row and a description column.';
+        return;
+      }
+      itemBulkParsedItems = items;
+      itemBulkStatusText.textContent = skipped ? `${skipped} row(s) skipped (missing description).` : '';
+      itemBulkPreviewCount.textContent = `Ready to import ${items.length} item(s).`;
+      itemBulkPreview.style.display = '';
+    };
+    reader.onerror = () => { itemBulkStatusText.textContent = 'Could not read that file.'; };
+    reader.readAsText(file);
+  });
+
+  itemBulkConfirmBtn.addEventListener('click', () => {
+    if (!itemBulkParsedItems || !itemBulkParsedItems.length || !state.editingId) return;
+    itemBulkConfirmBtn.disabled = true;
+    itemBulkStatusText.textContent = 'Importing…';
+    const colRef = supplierItemsCollection(state.editingId);
+    const batch = Core.state.db.batch();
+    itemBulkParsedItems.forEach((item) => {
+      const docRef = colRef.doc();
+      batch.set(docRef, Object.assign({}, item, {
+        createdBy: Core.state.user.uid,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }));
+    });
+    batch.commit()
+      .then(() => {
+        itemBulkStatusText.textContent = `Imported ${itemBulkParsedItems.length} item(s).`;
+        itemBulkPreview.style.display = 'none';
+        itemBulkParsedItems = null;
+        setTimeout(() => itemBulkModal.classList.remove('open'), 900);
+      })
+      .catch((err) => { itemBulkStatusText.textContent = 'Import failed: ' + err.message; })
+      .finally(() => { itemBulkConfirmBtn.disabled = false; });
   });
 
   // ---------- shared supplier picker (used by Supplier POs) ----------
