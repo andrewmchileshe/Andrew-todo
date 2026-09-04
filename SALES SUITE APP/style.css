@@ -453,6 +453,12 @@ textarea { resize: vertical; min-height: 56px; }
 
 .modal-overlay.open { opacity: 1; pointer-events: auto; }
 
+/* The catalog picker can be opened from within another already-open modal (e.g. the
+   Supplier item modal's "Pick from catalog"). All modals share the same z-index, so
+   without this the picker would paint underneath the modal that opened it — visible
+   nowhere, and every click swallowed by the modal on top. */
+#catalogPickerModal { z-index: 11; }
+
 .modal-card {
   background: var(--card-bg);
   backdrop-filter: blur(24px) saturate(180%);
