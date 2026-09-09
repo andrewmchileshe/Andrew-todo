@@ -385,17 +385,28 @@
 
   // ---------- combo fields (text input + datalist "dropdown" caret) ----------
   // A plain <input list="..."> shows no arrow or hint that preset options exist, so
-  // every combo-caret button just forces that native suggestion list open — the input
-  // itself is untouched and still free-text, so typing a custom value always works.
+  // every combo-caret button forces that native suggestion list open. Browsers filter
+  // datalist suggestions against whatever the field already contains — so a field
+  // pre-filled with "ZMW" only ever suggests "ZMW" itself, since nothing else starts
+  // with it, which looks exactly like the dropdown is broken. Clearing the field first
+  // (restored on blur if nothing was picked) makes every option show up regardless of
+  // the current value, while the field itself stays fully free-text.
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('.combo-caret');
     if (!btn) return;
     const input = el(btn.dataset.comboTarget);
     if (!input) return;
+    const previousValue = input.value;
+    input.value = '';
     input.focus();
     if (typeof input.showPicker === 'function') {
       try { input.showPicker(); } catch (err) { /* not supported in this browser/state — focus is still useful */ }
     }
+    const restoreIfUntouched = () => {
+      if (input.value === '') input.value = previousValue;
+      input.removeEventListener('blur', restoreIfUntouched);
+    };
+    input.addEventListener('blur', restoreIfUntouched);
   });
 
   // ---------- purchase orders: customer/supplier type toggle ----------
