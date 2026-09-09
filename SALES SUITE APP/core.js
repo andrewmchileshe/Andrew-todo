@@ -383,6 +383,21 @@
     }
   });
 
+  // ---------- combo fields (text input + datalist "dropdown" caret) ----------
+  // A plain <input list="..."> shows no arrow or hint that preset options exist, so
+  // every combo-caret button just forces that native suggestion list open — the input
+  // itself is untouched and still free-text, so typing a custom value always works.
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.combo-caret');
+    if (!btn) return;
+    const input = el(btn.dataset.comboTarget);
+    if (!input) return;
+    input.focus();
+    if (typeof input.showPicker === 'function') {
+      try { input.showPicker(); } catch (err) { /* not supported in this browser/state — focus is still useful */ }
+    }
+  });
+
   // ---------- purchase orders: customer/supplier type toggle ----------
   const poTypeCustomerBtn = el('poTypeCustomerBtn');
   const poTypeSupplierBtn = el('poTypeSupplierBtn');

@@ -148,7 +148,10 @@
               <label>Date<input type="date" id="quoteDateInput"></label>
               <label>Valid until<input type="date" id="quoteValidUntilInput"></label>
               <label>Base currency
-                <input type="text" id="quoteBaseCurrencySelect" list="quoteCurrencyList" maxlength="6">
+                <div class="combo-field">
+                  <input type="text" id="quoteBaseCurrencySelect" list="quoteCurrencyList" maxlength="6">
+                  <button type="button" class="combo-caret" data-combo-target="quoteBaseCurrencySelect" tabindex="-1" aria-label="Show currency options">▾</button>
+                </div>
                 <datalist id="quoteCurrencyList">
                   <option value="ZMW"><option value="USD"><option value="ZAR"><option value="GBP"><option value="EUR">
                 </datalist>
@@ -173,8 +176,27 @@
 
             <p class="field-label">Terms</p>
             <div class="form-grid">
-              <label>Payment terms<input type="text" id="quotePaymentTermsInput" placeholder="30 Days Net"></label>
-              <label>Incoterms<input type="text" id="quoteIncotermsInput" placeholder="DDP"></label>
+              <label>Payment terms
+                <div class="combo-field">
+                  <input type="text" id="quotePaymentTermsInput" list="quotePaymentTermsList" placeholder="30 Days Net">
+                  <button type="button" class="combo-caret" data-combo-target="quotePaymentTermsInput" tabindex="-1" aria-label="Show payment term options">▾</button>
+                </div>
+                <datalist id="quotePaymentTermsList">
+                  <option value="100% Advance Payment"><option value="50% Advance, 50% on Delivery">
+                  <option value="30 Days Net"><option value="60 Days Net"><option value="Cash on Delivery">
+                  <option value="Letter of Credit">
+                </datalist>
+              </label>
+              <label>Incoterms
+                <div class="combo-field">
+                  <input type="text" id="quoteIncotermsInput" list="quoteIncotermsList" placeholder="DDP">
+                  <button type="button" class="combo-caret" data-combo-target="quoteIncotermsInput" tabindex="-1" aria-label="Show incoterm options">▾</button>
+                </div>
+                <datalist id="quoteIncotermsList">
+                  <option value="EXW"><option value="FCA"><option value="FOB"><option value="CIF">
+                  <option value="CPT"><option value="CIP"><option value="DAP"><option value="DDP">
+                </datalist>
+              </label>
             </div>
 
             <p class="field-label">Notes</p>
@@ -309,9 +331,33 @@
           <div class="card">
             <h2>Terms &amp; conditions</h2>
             <div class="form-grid">
-              <label>Payment terms<input type="text" id="oaPaymentTermsInput" placeholder="30 Days From Invoice Date"></label>
-              <label>Incoterms<input type="text" id="oaIncotermsInput" placeholder="DDP"></label>
-              <label>Currency<input type="text" id="oaCurrencyInput" list="oaCurrencyList" maxlength="6"></label>
+              <label>Payment terms
+                <div class="combo-field">
+                  <input type="text" id="oaPaymentTermsInput" list="oaPaymentTermsList" placeholder="30 Days From Invoice Date">
+                  <button type="button" class="combo-caret" data-combo-target="oaPaymentTermsInput" tabindex="-1" aria-label="Show payment term options">▾</button>
+                </div>
+                <datalist id="oaPaymentTermsList">
+                  <option value="100% Advance Payment"><option value="50% Advance, 50% on Delivery">
+                  <option value="30 Days From Invoice Date"><option value="60 Days From Invoice Date"><option value="Cash on Delivery">
+                  <option value="Letter of Credit">
+                </datalist>
+              </label>
+              <label>Incoterms
+                <div class="combo-field">
+                  <input type="text" id="oaIncotermsInput" list="oaIncotermsList" placeholder="DDP">
+                  <button type="button" class="combo-caret" data-combo-target="oaIncotermsInput" tabindex="-1" aria-label="Show incoterm options">▾</button>
+                </div>
+                <datalist id="oaIncotermsList">
+                  <option value="EXW"><option value="FCA"><option value="FOB"><option value="CIF">
+                  <option value="CPT"><option value="CIP"><option value="DAP"><option value="DDP">
+                </datalist>
+              </label>
+              <label>Currency
+                <div class="combo-field">
+                  <input type="text" id="oaCurrencyInput" list="oaCurrencyList" maxlength="6">
+                  <button type="button" class="combo-caret" data-combo-target="oaCurrencyInput" tabindex="-1" aria-label="Show currency options">▾</button>
+                </div>
+              </label>
               <label>Special instructions<input type="text" id="oaSpecialInstructionsInput"></label>
             </div>
             <datalist id="oaCurrencyList">
@@ -431,7 +477,10 @@
                 <label>Date on their PO<input type="date" id="cpoPoDateInput"></label>
                 <label>Date received<input type="date" id="cpoReceivedDateInput"></label>
                 <label>Currency
-                  <input type="text" id="cpoCurrencyInput" list="cpoCurrencyList" maxlength="6">
+                  <div class="combo-field">
+                    <input type="text" id="cpoCurrencyInput" list="cpoCurrencyList" maxlength="6">
+                    <button type="button" class="combo-caret" data-combo-target="cpoCurrencyInput" tabindex="-1" aria-label="Show currency options">▾</button>
+                  </div>
                   <datalist id="cpoCurrencyList">
                     <option value="ZMW"><option value="USD"><option value="ZAR"><option value="GBP"><option value="EUR">
                   </datalist>
@@ -547,7 +596,10 @@
                 <label>Order date<input type="date" id="poOrderDateInput"></label>
                 <label>Expected date<input type="date" id="poExpectedDateInput"></label>
                 <label>Currency
-                  <input type="text" id="poCurrencyInput" list="poCurrencyList" maxlength="6">
+                  <div class="combo-field">
+                    <input type="text" id="poCurrencyInput" list="poCurrencyList" maxlength="6">
+                    <button type="button" class="combo-caret" data-combo-target="poCurrencyInput" tabindex="-1" aria-label="Show currency options">▾</button>
+                  </div>
                   <datalist id="poCurrencyList">
                     <option value="ZMW"><option value="USD"><option value="ZAR"><option value="GBP"><option value="EUR">
                   </datalist>
@@ -691,7 +743,12 @@
       <p class="field-label">Cost</p>
       <div class="form-grid">
         <label>Cost price<input type="number" min="0" step="0.01" id="catalogCostPriceInput"></label>
-        <label>Cost currency<input type="text" id="catalogCostCurrencyInput" maxlength="6"></label>
+        <label>Cost currency
+          <div class="combo-field">
+            <input type="text" id="catalogCostCurrencyInput" list="genericCurrencyList" maxlength="6">
+            <button type="button" class="combo-caret" data-combo-target="catalogCostCurrencyInput" tabindex="-1" aria-label="Show currency options">▾</button>
+          </div>
+        </label>
       </div>
       <div class="margin-row" style="margin-top:10px;">
         <div class="toggle-group" id="catalogMarginToggle">
@@ -706,7 +763,12 @@
       <p class="field-label">Default selling price</p>
       <div class="form-grid">
         <label>Selling price<input type="number" min="0" step="0.01" id="catalogSellingPriceInput"></label>
-        <label>Selling currency<input type="text" id="catalogSellingCurrencyInput" maxlength="6"></label>
+        <label>Selling currency
+          <div class="combo-field">
+            <input type="text" id="catalogSellingCurrencyInput" list="genericCurrencyList" maxlength="6">
+            <button type="button" class="combo-caret" data-combo-target="catalogSellingCurrencyInput" tabindex="-1" aria-label="Show currency options">▾</button>
+          </div>
+        </label>
       </div>
 
       <div class="action-row" style="margin-top:16px;">
@@ -801,7 +863,12 @@
       <label>Description<input type="text" id="supplierItemDescriptionInput"></label>
       <div class="form-grid">
         <label>Price<input type="number" min="0" step="0.01" id="supplierItemPriceInput"></label>
-        <label>Currency<input type="text" id="supplierItemCurrencyInput" maxlength="6"></label>
+        <label>Currency
+          <div class="combo-field">
+            <input type="text" id="supplierItemCurrencyInput" list="genericCurrencyList" maxlength="6">
+            <button type="button" class="combo-caret" data-combo-target="supplierItemCurrencyInput" tabindex="-1" aria-label="Show currency options">▾</button>
+          </div>
+        </label>
       </div>
       <div class="action-row" style="margin-top:16px;">
         <button type="button" class="pill-btn" id="supplierItemSaveBtn">Save</button>
@@ -810,6 +877,11 @@
       <p class="save-status-text" id="supplierItemStatusText"></p>
     </div>
   </div>
+
+  <!-- Shared currency options for fields with no document-specific list (Catalog, Supplier items) -->
+  <datalist id="genericCurrencyList">
+    <option value="ZMW"><option value="USD"><option value="ZAR"><option value="GBP"><option value="EUR">
+  </datalist>
 
   <!-- ---------- Supplier item bulk upload modal ---------- -->
   <div class="modal-overlay" id="supplierItemBulkUploadModal">
