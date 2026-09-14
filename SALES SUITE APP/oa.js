@@ -232,15 +232,27 @@
           phone: quote.client.phone || ''
         };
         oa.shipTo = Object.assign({}, oa.billTo, { attn: '' });
+        // computeLineItem's unitSellingPrice is the price BEFORE that line's own
+        // discount — lineTotal is what the customer actually agreed to pay for it.
+        // A quote can also carry a document-wide discount on top of any per-line ones,
+        // so scale every line by that same ratio before carrying prices into the OA.
+        const quoteTotals = Pricing.computeTotals(quote);
+        const documentDiscountRatio = quoteTotals.subtotal > 0
+          ? (quoteTotals.subtotal - quoteTotals.discountAmount) / quoteTotals.subtotal
+          : 1;
         oa.lineItems = (quote.lineItems || []).map((li) => {
           const computed = Pricing.computeLineItem(li);
+          const qty = Number(li.qty) || 0;
+          const discountedUnitPrice = qty > 0
+            ? Pricing.round2((computed.lineTotal / qty) * documentDiscountRatio)
+            : computed.unitSellingPrice;
           return {
             id: Core.uid(),
             description: li.description || '',
             itemCode: '',
-            qty: Number(li.qty) || 0,
+            qty: qty,
             unit: 'Each',
-            unitPrice: computed.unitSellingPrice,
+            unitPrice: discountedUnitPrice,
             leadTime: ''
           };
         });
