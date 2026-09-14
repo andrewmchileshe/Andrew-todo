@@ -124,7 +124,6 @@
   }
 
   function blankOa(oaNumber) {
-    const displayName = (Core.state.profile && Core.state.profile.displayName) || (Core.state.user && Core.state.user.email) || '';
     return {
       id: null,
       oaNumber: oaNumber,
@@ -132,10 +131,13 @@
       sourceQuoteId: null,
       sourceQuoteNumber: null,
       customerPoRef: '',
-      salesRep: displayName,
+      // Left blank on purpose — filled in by hand for each Acknowledgement rather than
+      // defaulting to whoever's signed in, since the person creating the record isn't
+      // necessarily the sales rep or the one acknowledging the order.
+      salesRep: '',
       dateIssued: Core.todayIso(),
-      acknowledgedBy: displayName,
-      contact: (Core.state.user && Core.state.user.email) || '',
+      acknowledgedBy: '',
+      contact: '',
       billTo: { name: '', address: '', phone: '' },
       shipTo: { name: '', address: '', attn: '' },
       lineItems: [],
