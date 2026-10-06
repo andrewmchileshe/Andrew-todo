@@ -16,7 +16,7 @@ const banner=new Table({width:{size:PW,type:WidthType.DXA},columnWidths:cols,lay
 const doc=new Document({
   creator:'Chemsol Scientific Limited',title:'Chemsol Scientific Letterhead',
   styles:{default:{document:{run:{font:'Calibri',size:22,color:'1C2B25'},paragraph:{spacing:{after:120,line:276}}}}},
-  sections:[{properties:{page:{size:{width:PW,height:16838},margin:{top:2700,bottom:1300,left:LM,right:LM,header:500,footer:0}}},
+  sections:[{properties:{page:{size:{width:PW,height:16838},margin:{top:2700,bottom:1700,left:LM,right:LM,header:500,footer:430}}},
     headers:{default:new Header({children:[new Paragraph({spacing:{before:0,after:0,line:240,lineRule:'auto'},children:[new ImageRun({type:'png',data:fs.readFileSync('assets/logo.png'),transformation:{width:104,height:123}})]})]})},
     footers:{default:new Footer({children:[banner,new Paragraph({spacing:{before:0,after:0,line:20,lineRule:'exact'},children:[]})]})},
     children:[new Paragraph({children:[]})]}]});
