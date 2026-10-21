@@ -251,11 +251,11 @@
           return {
             id: Core.uid(),
             description: li.description || '',
-            itemCode: '',
+            itemCode: li.itemCode || '',
             qty: qty,
             unit: 'Each',
             unitPrice: discountedUnitPrice,
-            leadTime: ''
+            leadTime: li.leadTime || ''
           };
         });
         state.oa = oa;
