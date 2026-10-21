@@ -259,7 +259,11 @@
 
         <div id="quoteHistoryView" style="display:none;">
           <div class="card">
-            <input type="text" id="quoteHistorySearchInput" placeholder="Search by quote #, client or company">
+            <div class="action-row">
+              <input type="text" id="quoteHistorySearchInput" placeholder="Search by quote #, client or company" style="flex:1;">
+              <button type="button" class="pill-btn secondary" id="quoteDownloadAllBtn" style="flex:none;">Download all PDFs</button>
+            </div>
+            <p class="save-status-text" id="quoteDownloadAllStatus"></p>
           </div>
           <div class="card">
             <div id="quoteHistoryList"></div>
@@ -391,7 +395,11 @@
 
         <div id="oaHistoryView" style="display:none;">
           <div class="card">
-            <input type="text" id="oaHistorySearchInput" placeholder="Search by Ack #, PO ref or customer">
+            <div class="action-row">
+              <input type="text" id="oaHistorySearchInput" placeholder="Search by Ack #, PO ref or customer" style="flex:1;">
+              <button type="button" class="pill-btn secondary" id="oaDownloadAllBtn" style="flex:none;">Download all PDFs</button>
+            </div>
+            <p class="save-status-text" id="oaDownloadAllStatus"></p>
           </div>
           <div class="card">
             <div id="oaHistoryList"></div>
@@ -981,12 +989,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="pricing.js"></script>
   <script src="quote-pdf.js"></script>
   <script src="oa-pdf.js"></script>
   <script src="catalog-pdf.js"></script>
   <script src="po-pdf.js"></script>
   <script src="report-pdf.js"></script>
+  <script src="bulk-export.js"></script>
   <script src="core.js"></script>
   <script src="catalog.js"></script>
   <script src="customers.js"></script>

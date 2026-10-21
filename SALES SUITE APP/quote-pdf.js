@@ -253,5 +253,10 @@
     window.open(doc.output('bloburl'), '_blank');
   }
 
-  global.QuotePdf = { generateQuotationPdf: generateQuotationPdf, viewQuotationPdf: viewQuotationPdf };
+  // Returns the PDF as a Blob instead of saving it — used by "Download all PDFs".
+  function getQuotationPdfBlob(quotation, totals, company) {
+    return buildQuotationDoc(quotation, totals, company).output('blob');
+  }
+
+  global.QuotePdf = { generateQuotationPdf: generateQuotationPdf, viewQuotationPdf: viewQuotationPdf, getQuotationPdfBlob: getQuotationPdfBlob };
 })(window);

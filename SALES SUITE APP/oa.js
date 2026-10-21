@@ -688,6 +688,23 @@
     }
   });
 
+  el('oaDownloadAllBtn').addEventListener('click', () => {
+    const company = Core.companyForPdf();
+    BulkExport.run({
+      button: el('oaDownloadAllBtn'),
+      statusEl: el('oaDownloadAllStatus'),
+      label: 'acknowledgement',
+      zipName: 'Acknowledgements-' + (company.name || 'export') + '.zip',
+      items: state.historyItems.map((item) => {
+        const loaded = normalizeLoaded(item);
+        return {
+          name: 'Acknowledgement-' + (loaded.oaNumber || item.id) + '.pdf',
+          build: () => OaPdf.getOaPdfBlob(loaded, Pricing.computeOaTotals(loaded), company)
+        };
+      })
+    });
+  });
+
   historySearchInput.addEventListener('input', renderHistory);
 
   // ---------- view switching ----------

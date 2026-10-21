@@ -230,5 +230,10 @@
     window.open(doc.output('bloburl'), '_blank');
   }
 
-  global.OaPdf = { generateOaPdf: generateOaPdf, viewOaPdf: viewOaPdf };
+  // Returns the PDF as a Blob instead of saving it — used by "Download all PDFs".
+  function getOaPdfBlob(oa, totals, company) {
+    return buildOaDoc(oa, totals, company).output('blob');
+  }
+
+  global.OaPdf = { generateOaPdf: generateOaPdf, viewOaPdf: viewOaPdf, getOaPdfBlob: getOaPdfBlob };
 })(window);

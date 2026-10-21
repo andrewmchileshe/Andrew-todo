@@ -839,6 +839,23 @@
     }
   });
 
+  el('quoteDownloadAllBtn').addEventListener('click', () => {
+    const company = Core.companyForPdf();
+    BulkExport.run({
+      button: el('quoteDownloadAllBtn'),
+      statusEl: el('quoteDownloadAllStatus'),
+      label: 'quotation',
+      zipName: 'Quotations-' + (company.name || 'export') + '.zip',
+      items: state.historyItems.map((item) => {
+        const loaded = normalizeLoadedQuotation(item);
+        return {
+          name: 'Quotation-' + (loaded.quoteNumber || item.id) + '.pdf',
+          build: () => QuotePdf.getQuotationPdfBlob(loaded, Pricing.computeTotals(loaded), company)
+        };
+      })
+    });
+  });
+
   historySearchInput.addEventListener('input', renderHistory);
 
   // ---------- view switching (editor / history sub-nav) ----------
