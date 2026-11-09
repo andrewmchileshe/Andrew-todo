@@ -72,6 +72,7 @@
       supplierContactName: '',
       supplierEmail: '',
       supplierPhone: '',
+      supplierAddress: '',
       orderDate: Core.todayIso(),
       expectedDate: '',
       currency: 'ZMW',
@@ -268,6 +269,7 @@
       state.po.supplierContactName = supplier.contactName || '';
       state.po.supplierEmail = supplier.email || '';
       state.po.supplierPhone = supplier.phone || '';
+      state.po.supplierAddress = supplier.address || '';
       renderHeader();
       saveDraftLocal();
     });
@@ -386,6 +388,7 @@
       supplierContactName: po.supplierContactName,
       supplierEmail: po.supplierEmail,
       supplierPhone: po.supplierPhone,
+      supplierAddress: po.supplierAddress || '',
       orderDate: po.orderDate,
       expectedDate: po.expectedDate,
       currency: po.currency,
@@ -405,6 +408,14 @@
 
   // onSaved (optional) fires only after a successful save — used by "Save & new" to chain
   // straight into a freshly-numbered purchase order without a second click.
+  // POs saved before the address was stored on them still point at their supplier —
+  // fill it in from the live supplier directory so their PDFs aren't missing it.
+  function withSupplierAddress(po) {
+    if (po.supplierAddress || !po.supplierId) return po;
+    const supplier = SuppliersModule.state.suppliers.find((s) => s.id === po.supplierId);
+    return supplier && supplier.address ? Object.assign({}, po, { supplierAddress: supplier.address }) : po;
+  }
+
   function savePo(onSaved) {
     if (state.saving) return;
     saveDraftLocal();
@@ -441,7 +452,7 @@
   downloadPdfBtn.addEventListener('click', () => {
     if (!confirmUnsavedExport('Download')) return;
     const totals = Pricing.computePoTotals(state.po);
-    PoPdf.generatePoPdf(state.po, totals, Core.companyForPdf());
+    PoPdf.generatePoPdf(withSupplierAddress(state.po), totals, Core.companyForPdf());
   });
 
   newBtn.addEventListener('click', () => {
@@ -501,10 +512,10 @@
 
     if (e.target.closest('[data-view-history]')) {
       const loaded = normalizeLoaded(item);
-      PoPdf.viewPoPdf(loaded, Pricing.computePoTotals(loaded), Core.companyForPdf());
+      PoPdf.viewPoPdf(withSupplierAddress(loaded), Pricing.computePoTotals(loaded), Core.companyForPdf());
     } else if (e.target.closest('[data-download-history]')) {
       const loaded = normalizeLoaded(item);
-      PoPdf.generatePoPdf(loaded, Pricing.computePoTotals(loaded), Core.companyForPdf());
+      PoPdf.generatePoPdf(withSupplierAddress(loaded), Pricing.computePoTotals(loaded), Core.companyForPdf());
     } else if (e.target.closest('[data-open-history]')) {
       state.po = normalizeLoaded(item);
       state.lastSavedJson = JSON.stringify(state.po);

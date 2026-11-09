@@ -117,6 +117,7 @@
     y = sectionBar(y, 'SUPPLIER');
     const supplierLines = [
       po.supplierName,
+      po.supplierAddress ? String(po.supplierAddress).split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean).join('\n') : '',
       po.supplierContactName ? ('Attn: ' + po.supplierContactName) : '',
       po.supplierEmail,
       po.supplierPhone
