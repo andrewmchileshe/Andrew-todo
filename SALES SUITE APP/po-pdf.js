@@ -1,7 +1,6 @@
 // Supplier Purchase Order PDF — the document we send to a supplier to place an order.
 // Mirrors oa-pdf.js's layout (navy section bars, itemized table, notes, footer), with a
-// "Supplier" block in place of Bill To/Ship To, and a Kwacha-equivalent value line when
-// the PO's own currency isn't Kwacha.
+// "Supplier" block in place of Bill To/Ship To. The internal Kwacha valuation is never shown.
 (function (global) {
   const DEFAULT_NAVY = [39, 55, 108];
   const marginX = 40;
@@ -169,14 +168,8 @@
     doc.setFont(undefined, 'normal');
     finalY += 15;
 
-    // Only shown when the PO isn't already in Kwacha — otherwise it's just the same
-    // number twice.
-    if ((po.currency || 'ZMW') !== 'ZMW') {
-      doc.setFontSize(8.5);
-      line(doc, 'Approx. value (ZMW @ ' + (po.exchangeRateToKwacha || 1) + ')', 380, finalY);
-      doc.text('ZMW ' + fmt(totals.kwachaValue), rightEdge, finalY, { align: 'right' });
-      finalY += 15;
-    }
+    // No Kwacha-equivalent line on purpose — this goes to the supplier, and the ZMW
+    // valuation is internal (it stays on screen and in the Reports tab).
     y = finalY + 16;
 
     // ---- notes ----
